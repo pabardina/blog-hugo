@@ -4,7 +4,7 @@ draft = false
 title = "Déploiement continu d'Hugo avec Docker et Tutum"
 slug = "deploiement-continu-hugo-docker-tutum"
 +++
-J'ai commencé mon blog avec Pelican, le générateur de site statique en Python. Plus tard, je suis passé sur Ghost qui me semblait plus intéressant, répondant d'avantage à mes besoins. Depuis que j'ai découvert Docker, j'ai toujours eu l'idée de stocker l'ensemble de mon blog dans un conteneur et ce d'une façon simple. Ainsi, Ghost ne répondait plus à ma problématique, je suis reparti avec les générateurs de sites statiques. Étant donnée les louanges que j'entends sur le langage Go et ses performances, j'ai privilégié mes recherches sur un générateur en Go. C'est là qu'intervient Hugo, un générateur de site statique pure Go, avec une grosse communauté derrière. Très simple en prendre en main, beaucoup de fonctionnalités, léger et parfait pour être dockerizé.
+J'ai commencé mon blog il y a quelques mois avec Pelican, le générateur de site statique en Python. Plus tard, je suis passé sur Ghost qui me semblait plus intéressant, répondant d'avantage à mes besoins. Depuis que j'ai découvert Docker, j'ai toujours eu l'idée de stocker l'ensemble de mon blog dans un conteneur et ce d'une façon simple. Ainsi, Ghost ne répondait plus à ma problématique, je suis reparti avec les générateurs de sites statiques. Étant donnée les louanges que j'entends sur le langage Go et ses performances, j'ai privilégié mes recherches sur un générateur en Go. C'est là qu'intervient Hugo, un générateur de site statique pure Go, avec une grosse communauté derrière. Très simple en prendre en main, beaucoup de fonctionnalités, léger et parfait pour être dockerizé.
 
 Migration Ghost -> Hugo
 ======
