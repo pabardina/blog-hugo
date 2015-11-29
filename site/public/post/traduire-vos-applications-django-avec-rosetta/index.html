@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+<head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>Traduire vos applications Django avec Rosetta &middot; Pierre-Alexandre Bardina</title>
+
+  
+  <link rel="stylesheet" href="http://localhost:1313/css/poole.css">
+  <link rel="stylesheet" href="http://localhost:1313/css/hyde.css">
+  <link rel="stylesheet" href="http://localhost:1313/css/poole-overrides.css">
+  <link rel="stylesheet" href="http://localhost:1313/css/hyde-overrides.css">
+  <link rel="stylesheet" href="http://localhost:1313/css/hyde-x.css">
+  <link rel="stylesheet" href="http://localhost:1313/css/highlight/sunburst.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+  
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="http://localhost:1313/touch-icon-144-precomposed.png">
+  <link href="http://localhost:1313/favicon.png" rel="icon">
+
+  
+  
+  
+  
+
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+</head>
+<body class="theme-base-0c">
+<div class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      
+      <h1>Pierre-Alexandre Bardina</h1>
+      <p class="lead">En perpétuelle évolution</p>
+    </div>
+
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item"><a href="http://localhost:1313/">Blog</a></li>
+      
+    </ul>
+
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item">
+      <a href="https://github.com/pabardina"><i class="fa fa-github-square fa-3x"></i></a>
+      
+      
+      <a href="https://www.linkedin.com/in/pabardina"><i class="fa fa-linkedin-square fa-3x"></i></a>
+      
+      
+      <a href="https://www.twitter.com/pabardina"><i class="fa fa-twitter-square fa-3x"></i></a>
+      
+      
+      </li>
+    </ul>
+
+    
+
+    <p>Copyright &copy; 2015 <a href="http://localhost:1313/license/">License</a><br/>
+       Powered by <a href="http://gohugo.io">Hugo</a> and <a href="https://github.com/zyro/hyde-x">Hyde-X</a></p>
+  </div>
+</div>
+
+
+<div class="content container">
+  <div class="post">
+    <h1>Traduire vos applications Django avec Rosetta</h1>
+    <span class="post-date">May 1, 2015 &middot; 2 minute read
+    </span>
+    
+
+<h3 id="introduction:0e9c183430548dc648dc8268eced6ce0">Introduction</h3>
+
+<p>Afin de traduire des applications Django, nous allons utiliser <a href="https://github.com/mbi/django-rosetta" target="_blank">Rosetta</a>.</p>
+
+<blockquote>
+<p>Rosetta est une application Django qui facilite le processus de traduction de vos projets.</p>
+</blockquote>
+
+<p>Pour ce faire, il est nécessaire d&rsquo;utiliser au préalable d&rsquo;avoir dans son projet des clées de langues :</p>
+
+<ol>
+<li>Dans les fichiers html, on utilise la syntaxte <code>{{ _(&quot;lang&quot;) }}</code>.
+Si vous avez une erreur avec le <code>_</code>  vous devez dans votre fichier <code>base.html</code>, ajoutez : <code>{% load i18n %}</code></li>
+<li>Dans les vues, on utilise la syntaxte <code>_(&quot;key&quot;)</code> après avoir importé <code>from django.utils.translation import ugettext_lazy as _</code></li>
+</ol>
+
+<hr />
+
+<h3 id="installation:0e9c183430548dc648dc8268eced6ce0">Installation</h3>
+
+<p>Pour commencer, vous devez l&rsquo;installer :</p>
+
+<ol>
+<li><p><code>pip install django-rosetta</code></p></li>
+
+<li><p>Ajouter <code>Rosetta</code> à <code>INSTALLED_APPS</code> dans votre fichier <code>settings.py</code></p></li>
+
+<li><p>Dans votre fichier urls.py, ajoutez par exemple :</p></li>
+</ol>
+
+<pre><code class="language-python">from django.conf import settings
+
+if 'rosetta' in settings.INSTALLED_APPS:
+    urlpatterns += patterns('',
+        url(r'^rosetta/', include('rosetta.urls')),
+    )
+</code></pre>
+
+<p>Vous pouvez donc accéder à votre application rosetta à l&rsquo;adresse suivante: <a href="http://localhost:8000/rosetta" target="_blank"><a href="http://localhost:8000/rosetta">http://localhost:8000/rosetta</a></a></p>
+
+<p>Vous devez également rajouter quelques lignes dans votre fichier <code>settings.py</code>:</p>
+
+<pre><code class="language-python">LANGUAGE_CODE = 'fr-fr' # langue par défaut de votre site
+
+LANGUAGES = (
+    (&quot;fr&quot;, 'Francais'),
+    (&quot;en&quot;, &quot;Anglais&quot;),
+)
+
+USE_I18N = True # pour activer l'internationalisation
+</code></pre>
+
+<hr />
+
+<h3 id="utilisation:0e9c183430548dc648dc8268eced6ce0">Utilisation</h3>
+
+<p>Pour le moment, votre application n&rsquo;apparaît pas dans rosetta, c&rsquo;est normal. Pour y remédier, vous avez besoin de créer les répertoires <code>locale</code>, et de générer les fichiers lang.</p>
+
+<p>Pour ce faire, créer dans chacune de vos applications à traduire, un dossier <code>locale</code>, ainsi que les dossiers dans lesquels vous voulez traduire l&rsquo;application.</p>
+
+<p>Par exemple, dans mon projet <code>test</code>, je veux traduire mon application <code>blog</code> en français et en anglais :</p>
+
+<ol>
+<li><p><code>cd test/blog</code></p></li>
+
+<li><p><code>mkdir -p locale/{fr,en}</code></p></li>
+
+<li><p>Génération des fichiers langues : <code>django-admin.py makemessages</code></p></li>
+
+<li><p>Reconnectez vous sur rosetta, et vous pourrez dès à présent voir votre application, avec la possibilité de la traduire.</p></li>
+</ol>
+
+<p>Dans votre fichier <code>settings.py</code>, vous avez la possibilité de configurer rosetta pour par exemple, gérer le nombre de clées à traduire par page, exclure une application..</p>
+
+<pre><code class="language-python">ROSETTA_MESSAGES_PER_PAGE = 50
+ROSETTA_EXCLUDED_APPLICATIONS = ['rosetta'] # pour ne pas l'afficher dans les applications à traduire
+</code></pre>
+
+<p>Voila, c&rsquo;est tout, si vous voulez tester, changer la langue de votre navigateur.</p>
+
+  </div>
+  
+</div>
+
+
+
+
+<script src="http://localhost:1313/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script data-no-instant>document.write('<script src="http://'
+        + (location.host || 'localhost').split(':')[0]
+		+ ':1313/livereload.js?mindelay=10"></'
+        + 'script>')</script></body>
+</html>
+

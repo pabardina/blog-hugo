@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+<head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title> &middot; Pierre-Alexandre Bardina</title>
+
+  
+  <link rel="stylesheet" href="http://localhost:1313/css/poole.css">
+  <link rel="stylesheet" href="http://localhost:1313/css/hyde.css">
+  <link rel="stylesheet" href="http://localhost:1313/css/poole-overrides.css">
+  <link rel="stylesheet" href="http://localhost:1313/css/hyde-overrides.css">
+  <link rel="stylesheet" href="http://localhost:1313/css/hyde-x.css">
+  <link rel="stylesheet" href="http://localhost:1313/css/highlight/sunburst.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+  
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="http://localhost:1313/touch-icon-144-precomposed.png">
+  <link href="http://localhost:1313/favicon.png" rel="icon">
+
+  
+  
+  
+  
+
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+</head>
+<body class="theme-base-0c">
+<div class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      
+      <h1>Pierre-Alexandre Bardina</h1>
+      <p class="lead">En perpétuelle évolution</p>
+    </div>
+
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item"><a href="http://localhost:1313/">Blog</a></li>
+      
+    </ul>
+
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item">
+      <a href="https://github.com/pabardina"><i class="fa fa-github-square fa-3x"></i></a>
+      
+      
+      <a href="https://www.linkedin.com/in/pabardina"><i class="fa fa-linkedin-square fa-3x"></i></a>
+      
+      
+      <a href="https://www.twitter.com/pabardina"><i class="fa fa-twitter-square fa-3x"></i></a>
+      
+      
+      </li>
+    </ul>
+
+    
+
+    <p>Copyright &copy; 2015 <a href="http://localhost:1313/license/">License</a><br/>
+       Powered by <a href="http://gohugo.io">Hugo</a> and <a href="https://github.com/zyro/hyde-x">Hyde-X</a></p>
+  </div>
+</div>
+
+
+<div class="content container">
+  <div class="post">
+    <h1></h1>
+    <span class="post-date">Jan 1, 0001 &middot; 4 minute read
+    </span>
+    
+
+<p>#Déploiement continue d&rsquo;Hugo avec Docker et Tutum</p>
+
+<p>J&rsquo;ai commencé mon blog avec Pelican, le générateur de site statique en Python. Plus tard, je suis passé sur Ghost qui me semblait plus intéressant, et répondre d&rsquo;avantage à mes besoins. Depuis que j&rsquo;ai découvert Docker, j&rsquo;ai toujours eu l&rsquo;idée de stocker l&rsquo;ensemble de mon blog dans un conteneur et ce d&rsquo;une façon simple. Ainsi, Ghost ne répondait plus à ma problématique, je me suis (re)tourné avec les générateurs de sites statiques. Etant donnée les louanges que j&rsquo;entends sur le langage Go et ses performances, j&rsquo;ai privilégié mes recherches d&rsquo;un générateur en Go. C&rsquo;est là qu&rsquo;intervient Hugo, un générateur de site statique pure Go, avec une grosse communauté derrière. Très simple en prendre en main, beaucoup de fonctionnalités, léger et parfait pour dockerizé :) .</p>
+
+<p>###Migration Ghost -&gt; Hugo</p>
+
+<p>Rien de plus simple, il suffit d&rsquo;exporter ses articles depuis l&rsquo;interface Ghost, et d&rsquo;utiliser ce script <a href="https://github.com/jbarone/ghostToHugo">https://github.com/jbarone/ghostToHugo</a> .</p>
+
+<p>###Docker</p>
+
+<p>Une fois votre blog configuré (thème, articles&hellip;), il est temps de passé à sa dockérization. Pour ma part, j&rsquo;ai décidé d&rsquo;utiliser le serveur intégré dans Hugo plutôt que de rajouter un Nginx ou Apache. Il me suffit pour le moment.</p>
+
+<p>Voici mon Dockerfile :</p>
+
+<pre><code class="language-sh">FROM debian:wheezy
+
+# Install pygments (for syntax highlighting)
+RUN apt-get -qq update \
+        &amp;&amp; DEBIAN_FRONTEND=noninteractive apt-get -qq install -y --no-install-recommends python-pygments \
+        &amp;&amp; rm -rf /var/lib/apt/lists/*
+
+# Download and install hugo
+ENV HUGO_VERSION 0.14
+ENV HUGO_BINARY hugo_${HUGO_VERSION}_linux_amd64
+
+ADD https://github.com/spf13/hugo/releases/download/v${HUGO_VERSION}/${HUGO_BINARY}.tar.gz /usr/local/
+RUN tar xzf /usr/local/${HUGO_BINARY}.tar.gz -C /usr/local/ \
+        &amp;&amp; ln -s /usr/local/${HUGO_BINARY}/${HUGO_BINARY} /usr/local/bin/hugo \
+        &amp;&amp; rm /usr/local/${HUGO_BINARY}.tar.gz
+
+ADD site/ /usr/share/blog
+WORKDIR /usr/share/blog
+
+EXPOSE 1313
+
+CMD hugo server --watch --baseUrl=${HUGO_BASE_URL} --port=1313 --appendPort=False --bind=0.0.0.0
+</code></pre>
+
+<p>Architecture :</p>
+
+<p>On crée l&rsquo;image :
+<code>docker build -t blog .</code></p>
+
+<p>Et on lance le conteneur :
+<code>docker run -d -p 80:1313 -e HUGO_BASE_URL=http://192.168.99.100 blog</code></p>
+
+<h3 id="déploiement-continue:3fa0bcf230dd7be7eb3b097a58ba25b7">Déploiement Continue</h3>
+
+<p>Prérequis :
+* un repository github
+* un compte Docker Hub
+* un compte Tutum (connexion avec le compte Docker Hub)</p>
+
+<p>La première étape pour le déploiement continue va être de créer un &ldquo;automated build&rdquo; sur le Hub de Docker et de le lier avec votre repository Github.</p>
+
+<p>Image Create</p>
+
+<p>image create 2</p>
+
+<p>Pour tester le lien, soit vous faites un pousser une modification sur Github ou vous allez <strong>Build Settings</strong> et vous cliquez sur <strong>Trigger</strong></p>
+
+<p>Un build va être lancé, visible dans <strong>Build Details</strong> :</p>
+
+<p>image</p>
+
+<p>De plus, si vous allez dans les settings de votre repository Github ( <strong>Settings -&gt; Webhooks &amp; services</strong>), le lien est bien visible :</p>
+
+<p>image</p>
+
+<p>A chaque modification sur Github, l&rsquo;image sera recrée avec les dernières modifications. Un bon début, mais comment faire pour que mon blog en production se mette à jour tout seul ?</p>
+
+<h3 id="tutum:3fa0bcf230dd7be7eb3b097a58ba25b7">Tutum</h3>
+
+<p>Tutum, récemment racheté par Docker Inc est un service cloud pour déployer et gérer des conteneurs. Il permet de gérer de gérer plusieurs types de nodes (AWS, DigitalOcean, serveur personnel&hellip;). Très facile pour déployer un simple conteneur ou bien une stack plus complète avec du load balancing. Pour ma part, je trouve que c&rsquo;est un super outil qui pour le moment est en béta et gratuit. Reste à voir la politique tarifaire une fois la béta finie.</p>
+
+<p>Néanmoins, une fois connecté sur l&rsquo;interface avec votre compte Docker Hub, il faut tout d&rsquo;abord rajouter un node.</p>
+
+<p>image</p>
+
+<p>Lorsque vous êtes sur la page &ldquo;<strong>Nodes</strong>&rdquo;, deux choix possibles :
+* Soit vous utilisez votre propre serveur, dans ce cas là choisissez : <strong>Bring your own node</strong>
+* Soit (ce qui est mon cas) vous passez par un IaaS comme DigitalOcean : <strong>Launch new node cluster</strong></p>
+
+<p>Je ne vais pas détailler l&rsquo;utilisation de son propre serveur, tant la mise en place est simple (il suffit de copier une commande sur sa machine).</p>
+
+<p>Création du noeud DigitalOcean</p>
+
+<p>J&rsquo;ai choisi de créer une seule droplet DigitalOcean, si vous voulez que votre blog/site soit en load balacing, vous pouvez créer plusieurs noeuds.</p>
+
+<p>image</p>
+
+<p>image 2</p>
+
+<p>Création du service</p>
+
+<p>Prochaine étape, création du service, c&rsquo;est-à-dire déployer le blog sur mon noeud. Pour ce faire, une fois sur la page des services, cherchez votre image Docker :</p>
+
+<p>image</p>
+
+<p>Quelques configurations :
+image</p>
+
+<p>Pour finir, cliquez sur &ldquo;Create and Deploy&rdquo;</p>
+
+<p>Votre conteneur est maintenant déployé sur mon serveur, et votre blog est accessible.</p>
+
+<p>La dernière étape pour terminer ce déploiement continu va être de rajouter un webhook entre Tutum et le Hub de Docker.</p>
+
+<h3 id="tutum-docker-hub:3fa0bcf230dd7be7eb3b097a58ba25b7">Tutum + Docker Hub</h3>
+
+<p>Lorsque vous êtes sur votre service dans Tutum, allez sur le menu <strong>Triggers</strong>.</p>
+
+<p>Création du trigger:</p>
+
+<p>image</p>
+
+<p>Copier l&rsquo;url, et retournez sur l&rsquo;interface du Hub de Docker, dans la partie des webhooks.
+image</p>
+
+<p>Création du webhook:</p>
+
+<p>image</p>
+
+<p>Fini ! Maintenant, lorsque vous effectuerez une modification sur votre blog, une nouvelle image sera crée, votre conteneur en production sera détruit, et un nouveau sera déployé.</p>
+
+  </div>
+  
+</div>
+
+
+
+
+<script src="http://localhost:1313/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script data-no-instant>document.write('<script src="http://'
+        + (location.host || 'localhost').split(':')[0]
+		+ ':1313/livereload.js?mindelay=10"></'
+        + 'script>')</script></body>
+</html>
+

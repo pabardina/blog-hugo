@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+<head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>Django REST Framework : Authentification &middot; Pierre-Alexandre Bardina</title>
+
+  
+  <link rel="stylesheet" href="http://localhost:1313/css/poole.css">
+  <link rel="stylesheet" href="http://localhost:1313/css/hyde.css">
+  <link rel="stylesheet" href="http://localhost:1313/css/poole-overrides.css">
+  <link rel="stylesheet" href="http://localhost:1313/css/hyde-overrides.css">
+  <link rel="stylesheet" href="http://localhost:1313/css/hyde-x.css">
+  <link rel="stylesheet" href="http://localhost:1313/css/highlight/sunburst.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+  
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="http://localhost:1313/touch-icon-144-precomposed.png">
+  <link href="http://localhost:1313/favicon.png" rel="icon">
+
+  
+  
+  
+  
+
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+</head>
+<body class="theme-base-0c">
+<div class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      
+      <h1>Pierre-Alexandre Bardina</h1>
+      <p class="lead">En perpétuelle évolution</p>
+    </div>
+
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item"><a href="http://localhost:1313/">Blog</a></li>
+      
+    </ul>
+
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item">
+      <a href="https://github.com/pabardina"><i class="fa fa-github-square fa-3x"></i></a>
+      
+      
+      <a href="https://www.linkedin.com/in/pabardina"><i class="fa fa-linkedin-square fa-3x"></i></a>
+      
+      
+      <a href="https://www.twitter.com/pabardina"><i class="fa fa-twitter-square fa-3x"></i></a>
+      
+      
+      </li>
+    </ul>
+
+    
+
+    <p>Copyright &copy; 2015 <a href="http://localhost:1313/license/">License</a><br/>
+       Powered by <a href="http://gohugo.io">Hugo</a> and <a href="https://github.com/zyro/hyde-x">Hyde-X</a></p>
+  </div>
+</div>
+
+
+<div class="content container">
+  <div class="post">
+    <h1>Django REST Framework : Authentification</h1>
+    <span class="post-date">May 9, 2015 &middot; 6 minute read
+    </span>
+    
+
+<h1 id="introduction:dd1d22b0f98c8f156f2038b225be60af">Introduction</h1>
+
+<blockquote>
+<p>Django REST framework is a powerful and flexible toolkit that makes it easy to build Web APIs.<br />
+<a href="http://www.django-rest-framework.org/">http://www.django-rest-framework.org/</a></p>
+</blockquote>
+
+<p>Le but de cet article est de présenter Django REST framework avec un exemple.</p>
+
+<p>Pour ce premier article, il y aura l&rsquo;application d&rsquo;authentification du projet avec :</p>
+
+<ul>
+<li>extension du modèle user de django<br /></li>
+<li>authentification avec username ou email avec gestion token pour les requêtes<br /></li>
+<li>requêtes GET/POST/PATCH/DELETE sur modèle user</li>
+</ul>
+
+<p>Les sources du tutorial sont sur mon <strong><a href="https://github.com/pabardina/django-course/">github</a></strong>.</p>
+
+<p>Il est nécessaire pour bien comprendre le tutorial d&rsquo;avoir un minimum de bases avec Django.
+<br/></p>
+
+<h1 id="mise-en-place:dd1d22b0f98c8f156f2038b225be60af">Mise en place</h1>
+
+<p>On commence par créer un nouveau projet :<br />
+<code>django-admin startproject examplename</code></p>
+
+<p>On installe <a href="http://www.django-rest-framework.org/#installation">Django REST framework</a> :<br />
+<code>pip install djangorestframework</code></p>
+
+<p>Et on l&rsquo;ajoute dans les INSTALLED_APPS :</p>
+
+<pre><code class="language-python">INSTALLED_APPS = (
+    ...
+    'rest_framework',
+)
+</code></pre>
+
+<p>Il y a également des paramètres à mettre dans votre fichiers settings.py, tout dépend de comment vous souhaitez l&rsquo;utiliser.</p>
+
+<p>Exemple de mon fichier <a href="https://github.com/pabardina/django-course/blob/master/course/config/settings.py">settings.py</a> :</p>
+
+<pre><code class="language-python">REST_FRAMEWORK = {
+
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.TokenAuthentication', #  on utilise une authentification avec token, il est possible d'utiliser Oauth2.
+    ),
+
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.XMLRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+        'rest_framework.renderers.YAMLRenderer',
+    ), 
+
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated', #  par défaut, toutes les requêtes auront besoin du token
+    ),
+
+    'TEST_REQUEST_DEFAULT_FORMAT': 'json',
+
+    'TEST_REQUEST_RENDERER_CLASSES': (
+        'rest_framework.renderers.MultiPartRenderer',
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.YAMLRenderer'
+    )
+}
+
+CORS_ORIGIN_ALLOW_ALL = True
+</code></pre>
+
+<p><br/></p>
+
+<h3 id="utilisation-d-un-modèle-utilisateur-personnalisé:dd1d22b0f98c8f156f2038b225be60af">Utilisation d&rsquo;un modèle utilisateur personnalisé</h3>
+
+<p>Une fois votre projet Django configuré aux petits <a href="http://www.miximum.fr/checklist-bonnes-pratiques-django.html.html">oignons</a>, on crée l&rsquo;application authentification :<br />
+<code>django-admin startapp authentication</code></p>
+
+<h4 id="modèle-account:dd1d22b0f98c8f156f2038b225be60af">Modèle Account</h4>
+
+<p>Comme dit plus haut, on va étendre le model utilisateur de Django.
+Dans <code>authentication/models.py</code> :</p>
+
+<pre><code class="language-python">from django.contrib.auth.models import AbstractBaseUser
+
+
+class Account(AbstractBaseUser):
+    email = models.EmailField(unique=True)
+    username = models.CharField(max_length=40, unique=True)
+    first_name = models.CharField(max_length=70, blank=True)
+    last_name = models.CharField(max_length=70, blank=True)
+    is_admin = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    objects = AccountManager()
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
+
+    def __unicode__(self):
+        return self.email + &quot; - &quot; + self.username
+
+    @property
+    def is_superuser(self):
+        return self.is_admin
+
+    @property
+    def is_staff(self):
+        return self.is_admin
+
+    def has_perm(self, perm, obj=None):
+        return self.is_admin
+
+    def has_module_perms(self, app_label):
+        return self.is_admin
+</code></pre>
+
+<p>Simple modèle qui hérite de AbstractBaseUser.
+<br/></p>
+
+<h4 id="accountmanager:dd1d22b0f98c8f156f2038b225be60af">AccountManager</h4>
+
+<p>Il nous reste à coder le manager dans le même fichier :</p>
+
+<pre><code class="language-python">from django.contrib.auth.models import  BaseUserManager
+
+
+class AccountManager(BaseUserManager):
+    def create_user(self, email, password=None, **kwargs):
+        if not email:
+            raise ValueError('Users must have a valid email address.')
+
+        if not kwargs.get('username'):
+            raise ValueError('Users must have a valid username.')
+
+        account = self.model(
+            email=self.normalize_email(email), username=kwargs.get('username')
+        )
+
+        account.set_password(password)
+        account.save()
+
+        return account
+
+    def create_superuser(self, email, password, **kwargs):
+        account = self.create_user(email, password, **kwargs)
+
+        account.is_admin = True
+        account.save()
+
+        return account
+
+</code></pre>
+
+<p>Pour dire à Django d&rsquo;utiliser notre nouveau modèle utilisateur plutôt que le sien, on rajoute dans les settings :<br />
+<strong><code>AUTH_USER_MODEL = 'authentication.Account'</code></strong></p>
+
+<p>Pour en finir avec le fichier <code>authentication/models.py</code> , il nous faut coder le signals qui à chaque création d&rsquo;utilisateur va créer un token associé (modèle Token de Django rest framework) :</p>
+
+<pre><code class="language-python">@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)
+</code></pre>
+
+<p><br/></p>
+
+<h3 id="authentification-avec-username-ou-email:dd1d22b0f98c8f156f2038b225be60af">Authentification avec username ou email</h3>
+
+<p>Je souhaitais mettre en place une authentification avec username ou email, ce qui n&rsquo;est pas possible de base avec Django, mais qui est très facile à faire.</p>
+
+<p>Création d&rsquo;un fichier <strong><code>authentication/auth_backend.py</code></strong></p>
+
+<pre><code class="language-python">from django.conf import settings
+from django.contrib.auth import get_user_model
+
+class EmailOrUsernameModelBackend(object):
+    &quot;&quot;&quot;
+    This is a ModelBacked that allows authentication with either a username or an email address.
+
+    &quot;&quot;&quot;
+    def authenticate(self, username=None, password=None):
+        if '@' in username:
+            kwargs = {'email': username}
+        else:
+            kwargs = {'username': username}
+        try:
+            user = get_user_model().objects.get(**kwargs)
+            if user.check_password(password):
+                return user
+        except get_user_model().DoesNotExist:
+            return None
+
+    def get_user(self, username):
+        try:
+            return get_user_model().objects.get(pk=username)
+        except get_user_model().DoesNotExist:
+            return None
+</code></pre>
+
+<p>Il faut maintenant changer le <strong><code>AUTHENTICATION_BACKENDS</code></strong> :</p>
+
+<pre><code class="language-python">AUTHENTICATION_BACKENDS = (
+	'authentication.auth_backend.EmailOrUsernameModelBackend',
+)
+</code></pre>
+
+<p><br/></p>
+
+<h3 id="one-more-time:dd1d22b0f98c8f156f2038b225be60af">One more time</h3>
+
+<p>Et pour que tout marche, un coup de migration :<br />
+<code>python manage.py makemigrations</code><br />
+<code>python manage.py migrate</code></p>
+
+<h2 id="serialization-de-notre-modèle-account:dd1d22b0f98c8f156f2038b225be60af">Serialization de notre modèle Account</h2>
+
+<p>Avant d&rsquo;entrée dans le vif du sujet, je vous laisse voir la <a href="http://www.django-rest-framework.org/api-guide/serializers/">documentation officiel de Django REST framework sur les serializers</a>, ce qui vous permettra de mieux comprendre la suite du tutorial.</p>
+
+<p>Le serializer de l&rsquo;application ressemble à :</p>
+
+<pre><code class="language-python"># django import
+from django.contrib.auth import update_session_auth_hash
+# Django REST Framework import
+from rest_framework import serializers
+# authentication app import
+from authentication.models import Account
+
+class AccountSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=False)
+    confirm_password = serializers.CharField(write_only=True, required=False)
+
+    def __init__(self, *args, **kwargs):
+        super(AccountSerializer, self).__init__(*args, **kwargs)
+
+        if self.context.get(&quot;request&quot;):
+            self.request = self.context['request']
+            if not self.request.method == &quot;POST&quot;:
+                del self.fields['auth_token']
+
+    class Meta:
+        model = Account
+        fields = ('id', 'email', 'username', 'created_at', 'updated_at',
+                  'first_name', 'last_name', 'password', 'confirm_password',
+                  'auth_token')
+        read_only_fields = ('created_at', 'updated_at', 'auth_token')
+
+        def create(self, validated_data):
+            return Account.objects.create(**validated_data)
+
+        def update(self, instance, validated_data):
+            instance.username = validated_data.get('username',
+                                                   instance.username)
+
+            instance.save()
+
+            password = validated_data.get('password', None)
+            confirm_password = validated_data.get('confirm_password', None)
+
+            if password and confirm_password and password == confirm_password:
+                instance.set_password(password)
+                instance.save()
+
+            update_session_auth_hash(self.context.get('request'), instance)
+
+            return instance
+</code></pre>
+
+<p>Comme je souhaite que toutes mes requêtes soient authentifiées, j&rsquo;ai besoin du champ <code>auth_token</code> sauf lors d&rsquo;une requête POST sur mon modèle (inscription d&rsquo;un utilisateur). C&rsquo;est ce que je fais dans la méthode <code>__init__</code> :</p>
+
+<pre><code class="language-python">def __init__(self, *args, **kwargs):
+    super(AccountSerializer, self).__init__(*args, **kwargs)
+
+    if self.context.get(&quot;request&quot;):
+        self.request = self.context['request']
+        if self.request.method == &quot;POST&quot;:
+            del self.fields['auth_token']
+</code></pre>
+
+<p><br/></p>
+
+<h3 id="permissions:dd1d22b0f98c8f156f2038b225be60af">Permissions</h3>
+
+<p>Avant de passer au fichier des <strong><code>views.py</code></strong>, pour le besoin de l&rsquo;application, j&rsquo;ai codé une permission supplémentaire. N&rsquo;hésitez pas à aller voir la <a href="http://www.django-rest-framework.org/api-guide/permissions/">documentation de Django REST framework pour les permissions</a>, la plupart des besoins sont couverts, et en rajouter des personnalisés est très simple, la preuve :</p>
+
+<pre><code class="language-python">from rest_framework import permissions
+ 
+class IsOwner(permissions.BasePermission):
+    &quot;&quot;&quot;
+    Custom permission to only allow owner of an object to use it.
+    &quot;&quot;&quot;
+
+    def has_object_permission(self, request, view, obj):
+        if hasattr(obj, 'auth_token') and hasattr(request.auth, 'key') and not request.method == &quot;GET&quot;:
+            return obj.auth_token.key == request.auth.key
+        elif request.method == 'POST' or request.method == &quot;GET&quot;:
+            return permissions.AllowAny(),
+</code></pre>
+
+<p><br/></p>
+
+<h3 id="et-voilà-les-views:dd1d22b0f98c8f156f2038b225be60af">Et voilà les &hellip;. views !</h3>
+
+<p>Les views sont un sujet assez vaste avec Django REST framework. Plusieurs choix sont possibles. Je vous laisse en juger par vous <a href="http://www.django-rest-framework.org/api-guide/views/">mêmes</a>.  Pour ma part, j&rsquo;utilise les <a href="http://www.django-rest-framework.org/api-guide/viewsets/#modelviewset">modelViewSet</a></p>
+
+<h4 id="account-view:dd1d22b0f98c8f156f2038b225be60af">Account view</h4>
+
+<p>Commençons par le modelViewSet de notre modèle Account.
+Ouvrez donc le fichier <strong><code>authentication/views.py</code></strong> :</p>
+
+<pre><code class="language-python">from rest_framework import permissions, viewsets, authentication
+from rest_framework import status, views
+from rest_framework.response import Response
+
+from authentication.models import Account
+from authentication.serializers import AccountSerializer
+from authentication.permissions import IsOwner
+
+
+class AccountViewSet(viewsets.ModelViewSet):
+    &quot;&quot;&quot; Account resource. &quot;&quot;&quot;
+    queryset = Account.objects.all()
+    serializer_class = AccountSerializer
+    authentication_classes = authentication.TokenAuthentication,
+    permission_classes = IsOwner,
+
+    def create(self, request):
+        &quot;&quot;&quot;
+        Create an account
+
+        &quot;&quot;&quot;
+        serializer = self.serializer_class(data=request.data,
+                                           context={'request': request})
+
+        if serializer.is_valid():
+            account = Account.objects.create_user(**serializer.validated_data)
+            serializer_with_token = AccountSerializer(
+                account, context={'request': request})
+            return Response(serializer_with_token.data,
+                            status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    def list(self, request, *args, **kwargs):
+        &quot;&quot;&quot;
+        Return a list of accounts.
+
+        &quot;&quot;&quot;
+        return super(AccountViewSet, self).list(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        &quot;&quot;&quot;
+        Update an object with all fields required
+
+        &quot;&quot;&quot;
+        return super(AccountViewSet, self).update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        &quot;&quot;&quot;
+        Update an object with specific field
+
+        &quot;&quot;&quot;
+        return super(AccountViewSet, self).partial_update(request, *args,
+                                                          **kwargs)
+</code></pre>
+
+<p>Comme vous pouvez le constater, il y a très peu de code. Les attributs sont <strong>importants</strong> :</p>
+
+<pre><code class="language-python">queryset = Account.objects.all() #  on récupère tout, on filtrera en fonction des droits
+serializer_class = AccountSerializer #  notre serializer codé plus haut
+authentication_classes = authentication.TokenAuthentication, #  le token sera nécessaire pour les requêtes
+permission_classes = IsOwner,
+</code></pre>
+
+<p><br/></p>
+
+<h4 id="exemple-login-view:dd1d22b0f98c8f156f2038b225be60af">Exemple login view</h4>
+
+<pre><code class="language-python">
+class LoginView(views.APIView):
+    &quot;&quot;&quot;
+    Login Ressource
+
+    &quot;&quot;&quot;
+    permission_classes = permissions.AllowAny,
+
+    def post(self, request, format=None):
+        &quot;&quot;&quot;
+        Two arguments:
+        username &amp; password
+        &quot;&quot;&quot;
+        data = request.DATA
+
+        username = data.get('username', None)
+        password = data.get('password', None)
+
+        account = authenticate(username=username, password=password)
+
+        if account is not None:
+            if account.is_active:
+                login(request, account)
+
+                serialized = AccountSerializer(account)
+
+                return Response(serialized.data)
+            else:
+                return Response({
+                    'status': 'Unauthorized',
+                    'message': 'This account has been disabled.'
+                }, status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            return Response({
+                'status': 'Unauthorized',
+                'message': 'Username/password combination invalid.'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+</code></pre>
+
+<p><br/></p>
+
+<h4 id="exemple-logout-view:dd1d22b0f98c8f156f2038b225be60af">Exemple logout view</h4>
+
+<pre><code class="language-python">
+class LogoutView(views.APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    &quot;&quot;&quot;
+    Logout Ressource
+    &quot;&quot;&quot;
+
+    def post(self, request, format=None):
+        &quot;&quot;&quot;
+        Simple Call on /logout in post. No arguments
+
+        &quot;&quot;&quot;
+        logout(request)
+
+        return Response({}, status=status.HTTP_204_NO_CONTENT)
+</code></pre>
+
+<p><br/></p>
+
+<p><img src="/images/2015/05/djangorest1.png" alt="" /></p>
+
+<p>Sources :</p>
+
+<ul>
+<li><a href="https://thinkster.io/django-angularjs-tutorial/">https://thinkster.io/django-angularjs-tutorial/</a><br /></li>
+<li><a href="http://www.django-rest-framework.org/">http://www.django-rest-framework.org/</a><br /></li>
+<li><a href="https://github.com/pabardina/django-course/">https://github.com/pabardina/django-course/</a><br /></li>
+</ul>
+
+  </div>
+  
+</div>
+
+
+
+
+<script src="http://localhost:1313/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script data-no-instant>document.write('<script src="http://'
+        + (location.host || 'localhost').split(':')[0]
+		+ ':1313/livereload.js?mindelay=10"></'
+        + 'script>')</script></body>
+</html>
+

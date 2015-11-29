@@ -1,0 +1,1159 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Pierre-Alexandre Bardina&#39;s blog</title>
+    <link>http://localhost:1313/</link>
+    <description>Recent content on Pierre-Alexandre Bardina&#39;s blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>fr-FR</language>
+    <lastBuildDate>Sun, 29 Nov 2015 14:42:00 +0200</lastBuildDate>
+    <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Déploiement continu d&#39;Hugo avec Docker et Tutum</title>
+      <link>http://localhost:1313/post/deploiement-continu-hugo-docker-tutum/</link>
+      <pubDate>Sun, 29 Nov 2015 14:42:00 +0200</pubDate>
+      
+      <guid>http://localhost:1313/post/deploiement-continu-hugo-docker-tutum/</guid>
+      <description>
+
+&lt;p&gt;J&amp;rsquo;ai commencé mon blog avec Pelican, le générateur de site statique en Python. Plus tard, je suis passé sur Ghost qui me semblait plus intéressant, répondant d&amp;rsquo;avantage à mes besoins. Depuis que j&amp;rsquo;ai découvert Docker, j&amp;rsquo;ai toujours eu l&amp;rsquo;idée de stocker l&amp;rsquo;ensemble de mon blog dans un conteneur et ce d&amp;rsquo;une façon simple. Ainsi, Ghost ne répondait plus à ma problématique, je suis reparti avec les générateurs de sites statiques. Étant donnée les louanges que j&amp;rsquo;entends sur le langage Go et ses performances, j&amp;rsquo;ai privilégié mes recherches sur un générateur en Go. C&amp;rsquo;est là qu&amp;rsquo;intervient Hugo, un générateur de site statique pure Go, avec une grosse communauté derrière. Très simple en prendre en main, beaucoup de fonctionnalités, léger et parfait pour être dockerizé.&lt;/p&gt;
+
+&lt;h1 id=&#34;migration-ghost-hugo:3fa0bcf230dd7be7eb3b097a58ba25b7&#34;&gt;Migration Ghost -&amp;gt; Hugo&lt;/h1&gt;
+
+&lt;p&gt;Rien de plus simple, il suffit d&amp;rsquo;exporter ses articles depuis l&amp;rsquo;interface Ghost, et d&amp;rsquo;utiliser ce script &lt;a href=&#34;https://github.com/jbarone/ghostToHugo&#34;&gt;https://github.com/jbarone/ghostToHugo&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h1 id=&#34;docker:3fa0bcf230dd7be7eb3b097a58ba25b7&#34;&gt;Docker&lt;/h1&gt;
+
+&lt;p&gt;Une fois votre blog configuré (thème, articles&amp;hellip;), il est temps de passer à sa dockérization. Pour ma part, j&amp;rsquo;ai décidé d&amp;rsquo;utiliser le serveur intégré dans Hugo plutôt que de rajouter Nginx ou Apache. Il me suffit pour le moment.&lt;/p&gt;
+
+&lt;p&gt;Mon Dockerfile :&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;FROM debian:wheezy
+
+ENV HUGO_VERSION 0.15
+ENV HUGO_BINARY hugo_${HUGO_VERSION}_linux_amd64
+
+ADD https://github.com/spf13/hugo/releases/download/v${HUGO_VERSION}/${HUGO_BINARY}.tar.gz /usr/local/
+RUN tar xzf /usr/local/${HUGO_BINARY}.tar.gz -C /usr/local/ \
+        &amp;amp;&amp;amp; ln -s /usr/local/${HUGO_BINARY}/${HUGO_BINARY} /usr/local/bin/hugo \
+        &amp;amp;&amp;amp; rm /usr/local/${HUGO_BINARY}.tar.gz
+
+ADD site/ /usr/share/blog
+WORKDIR /usr/share/blog
+
+EXPOSE 1313
+
+CMD hugo server --watch --baseUrl=${HUGO_BASE_URL} --port=1313 --appendPort=False --bind=0.0.0.0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Architecture :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/img/docker-tutum-hugo/architecture.png&#34; alt=&#34;Architecture blog&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;On crée l&amp;rsquo;image :&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;docker build -t blog .&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Et on lance le conteneur :&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;docker run -d -p 80:1313 -e HUGO_BASE_URL=http://192.168.99.100 blog&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br&gt;&lt;/p&gt;
+
+&lt;h1 id=&#34;déploiement-continue:3fa0bcf230dd7be7eb3b097a58ba25b7&#34;&gt;Déploiement Continue&lt;/h1&gt;
+
+&lt;p&gt;&lt;br&gt;
+Prérequis :&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;un repository github&lt;/li&gt;
+&lt;li&gt;un compte Docker Hub&lt;/li&gt;
+&lt;li&gt;un compte Tutum (connexion avec le compte Docker Hub)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;La première étape pour le déploiement continue va être de créer un &amp;ldquo;automated build&amp;rdquo; sur le Hub de Docker et de le lier avec votre repository Github.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/img/docker-tutum-hugo/automated.png&#34; alt=&#34;create automated build&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Choisissez votre répertoire Github, la visibilité de votre image et écrivez une description.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/img/docker-tutum-hugo/create.png&#34; alt=&#34;create automated build&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Pour tester le lien, soit vous pousser une modification sur Github soit vous allez dans &lt;strong&gt;Build Settings&lt;/strong&gt; et vous cliquez sur &lt;strong&gt;Trigger&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Un build va être lancé, visible dans &lt;strong&gt;Build Details&lt;/strong&gt; :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/img/docker-tutum-hugo/test-build.png&#34; alt=&#34;test automated build&#34; /&gt;
+&lt;br&gt;
+De plus, si vous allez dans les settings de votre repository Github ( &lt;strong&gt;Settings -&amp;gt; Webhooks &amp;amp; services&lt;/strong&gt;), le lien est bien visible :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/img/docker-tutum-hugo/github.png&#34; alt=&#34;Github link&#34; /&gt;
+&lt;br&gt;
+À chaque modification sur Github, l&amp;rsquo;image sera recrée avec les dernières modifications. Un bon début, mais comment faire pour que mon blog en production se mette à jour tout seul ?&lt;/p&gt;
+
+&lt;h1 id=&#34;tutum:3fa0bcf230dd7be7eb3b097a58ba25b7&#34;&gt;Tutum&lt;/h1&gt;
+
+&lt;p&gt;Tutum, récemment racheté par Docker Inc est un service cloud pour déployer et gérer des conteneurs. Il permet de gérer plusieurs types de nodes (AWS, DigitalOcean, serveur personnel&amp;hellip;). Très facile pour déployer un simple conteneur ou bien une stack plus complète avec du load balancing. Pour ma part, je trouve que c&amp;rsquo;est un super outil qui pour le moment est grauit puisqu&amp;rsquo;il est en béta. Reste à voir la politique tarifaire une fois la béta finie.&lt;/p&gt;
+
+&lt;p&gt;Néanmoins, une fois connecté sur l&amp;rsquo;interface avec votre compte Docker Hub, il faut tout d&amp;rsquo;abord rajouter un node.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/img/docker-tutum-hugo/node.png&#34; alt=&#34;Node Tutm&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Lorsque vous êtes sur la page &amp;ldquo;&lt;strong&gt;Nodes&lt;/strong&gt;&amp;rdquo;, deux choix possibles :&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Soit vous utilisez votre propre serveur, dans ce cas là choisissez : &lt;strong&gt;Bring your own node&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;Soit (ce qui est mon cas) vous passez par un IaaS comme DigitalOcean : &lt;strong&gt;Launch new node cluster&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Je ne vais pas détailler l&amp;rsquo;utilisation de son propre serveur, tant la mise en place est simple (il suffit de copier une commande sur sa machine).&lt;/p&gt;
+
+&lt;h3 id=&#34;création-du-noeud-digitalocean:3fa0bcf230dd7be7eb3b097a58ba25b7&#34;&gt;Création du noeud DigitalOcean&lt;/h3&gt;
+
+&lt;p&gt;J&amp;rsquo;ai choisi de créer une seule droplet DigitalOcean, si vous voulez que votre blog/site soit en load balacing, vous pouvez créer plusieurs noeuds.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/img/docker-tutum-hugo/nodedo.png&#34; alt=&#34;Node DigitalOcean&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Une fois le noeud crée, et déployé, passons au service.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/img/docker-tutum-hugo/node-deployed.png&#34; alt=&#34;Node DigitalOcean Deployed&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;création-du-service:3fa0bcf230dd7be7eb3b097a58ba25b7&#34;&gt;Création du service&lt;/h3&gt;
+
+&lt;p&gt;Prochaine étape, création du service, c&amp;rsquo;est-à-dire déployer le blog sur mon noeud. Pour ce faire, une fois sur la page des services, cherchez votre image Docker :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/img/docker-tutum-hugo/docker-tutum.png&#34; alt=&#34;Image Hub on Tutum&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Quelques configurations :
+&lt;img src=&#34;http://localhost:1313/img/docker-tutum-hugo/config.png&#34; alt=&#34;Configuration Service Tutum&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Pour finir, cliquez sur &amp;ldquo;&lt;strong&gt;Create and Deploy&lt;/strong&gt;&amp;ldquo;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/img/docker-tutum-hugo/deployed.png&#34; alt=&#34;Service deployed&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Votre conteneur est maintenant déployé sur votre serveur, et votre blog est accessible.&lt;/p&gt;
+
+&lt;p&gt;La dernière étape pour terminer ce déploiement continu va être de rajouter un lien entre Tutum et le Hub de Docker.&lt;/p&gt;
+
+&lt;h1 id=&#34;tutum-docker-hub:3fa0bcf230dd7be7eb3b097a58ba25b7&#34;&gt;Tutum + Docker Hub&lt;/h1&gt;
+
+&lt;p&gt;Lorsque vous êtes sur votre service dans Tutum, allez sur le menu &lt;strong&gt;Triggers&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;création-du-trigger:3fa0bcf230dd7be7eb3b097a58ba25b7&#34;&gt;Création du trigger&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/img/docker-tutum-hugo/create-trigger.png&#34; alt=&#34;Create Trigger&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Copiez l&amp;rsquo;url, et retournez sur l&amp;rsquo;interface du Hub de Docker.&lt;br /&gt;
+&lt;br&gt;
+&lt;img src=&#34;http://localhost:1313/img/docker-tutum-hugo/show-trigger.png&#34; alt=&#34;Create Trigger&#34; /&gt;
+&lt;br&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;création-du-webhook-sur-docker-hub:3fa0bcf230dd7be7eb3b097a58ba25b7&#34;&gt;Création du webhook sur Docker Hub&lt;/h3&gt;
+
+&lt;p&gt;&lt;br&gt;
+Sur l&amp;rsquo;interface du Docker Hub, allez dans la partie &amp;ldquo;&lt;strong&gt;Webhooks&lt;/strong&gt;&amp;rdquo; et créez un webhook avec l&amp;rsquo;url copié.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/img/docker-tutum-hugo/finish.png&#34; alt=&#34;Create Webhook on Hub&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Fini ! Maintenant, lorsque vous effectuerez une modification sur votre blog, une nouvelle image sera crée, votre conteneur en production sera détruit, et un nouveau sera déployé.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Docker : Django, Gunicorn, Celery, Redis, PostgreSQL</title>
+      <link>http://localhost:1313/post/docker-compose-django-gunicorn-celery-redis-postgresql/</link>
+      <pubDate>Wed, 20 May 2015 19:37:00 +0200</pubDate>
+      
+      <guid>http://localhost:1313/post/docker-compose-django-gunicorn-celery-redis-postgresql/</guid>
+      <description>
+
+&lt;p&gt;Développement Django avec Docker Compose.
+La stack utilisée pour l&amp;rsquo;exemple :&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Django&lt;/li&gt;
+&lt;li&gt;PostgreSQL&lt;/li&gt;
+&lt;li&gt;Gunicorn&lt;/li&gt;
+&lt;li&gt;Celery&lt;/li&gt;
+&lt;li&gt;Nginx&lt;/li&gt;
+&lt;li&gt;Redis&lt;/li&gt;
+&lt;li&gt;Supervisor&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://github.com/pabardina/docker-compose-django&#34;&gt;Git du projet &lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;docker:48b80581519ee5b4f1eaab835a4ece73&#34;&gt;Docker ?&lt;/h2&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Docker est un outil qui peut empaqueter une application et ses dépendances dans un conteneur virtuel, qui pourra être exécuté sur n&amp;rsquo;importe quel serveur Linux.&lt;br /&gt;
+&lt;a href=&#34;https://www.docker.com&#34;&gt;Docker&lt;/a&gt; (documentation officielle)&lt;br /&gt;
+&lt;a href=&#34;http://www.it-wars.com/debuter-avec-docker/&#34;&gt;Débuter avec Docker&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/2015/05/big-docker-logo-300x267.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;docker-compose:48b80581519ee5b4f1eaab835a4ece73&#34;&gt;Docker Compose&lt;/h2&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Compose est un outil pour définir et exécuter des applications complexes avec Docker. Avec Compose, vous définissez une application multi-conteneur dans un seul fichier, puis tourner votre application en une seule commande qui s&amp;rsquo;occupe de tout pour le faire marcher.&lt;br /&gt;
+&lt;a href=&#34;https://docs.docker.com/compose/&#34;&gt;Docker Compose&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;dockerfile:48b80581519ee5b4f1eaab835a4ece73&#34;&gt;Dockerfile&lt;/h3&gt;
+
+&lt;p&gt;Le Dockerfile du projet va créer un conteneur avec l&amp;rsquo;application Django,  installer ses dépendances ainsi que gérer Gunicorn et Celery avec Supervisor.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;FROM ubuntu:14.10
+
+ENV PYTHONUNBUFFERED 1
+
+WORKDIR /code
+
+RUN apt-get update &amp;amp;&amp;amp; apt-get upgrade -qq
+RUN apt-get install -y build-essential git
+RUN apt-get install -y python python-dev python-setuptools python-software-properties libpq-dev libxml2 gcc libxslt1-dev vim
+RUN apt-get install -y supervisor
+RUN apt-get -y autoremove
+RUN easy_install pip
+
+RUN mkdir -p /var/log/supervisor /etc/supervisor/conf.d
+ADD docker_config/supervisor.conf /etc/supervisor/conf.d/myconf.conf
+
+ADD requirements.txt /code/requirements.txt
+
+RUN pip install -r /code/requirements.txt
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;utilisation-d-un-conteneur-de-données:48b80581519ee5b4f1eaab835a4ece73&#34;&gt;Utilisation d&amp;rsquo;un conteneur de données&lt;/h3&gt;
+
+&lt;p&gt;Un conteneur de données va permettre de stocker des données utilisables par plusieurs conteneurs.&lt;br /&gt;
+Deux bonnes ressources :&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.docker.com/userguide/dockervolumes/#creating-and-mounting-a-data-volume-container&#34;&gt;data container&lt;/a&gt;  (documentation officielle)&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://medium.com/@ramangupta/why-docker-data-containers-are-good-589b3c6c749e&#34;&gt;un bon discours&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Il n&amp;rsquo;est pas possible de créer un container de données avec Compose (bientôt ?).
+&lt;br/&gt;Ainsi, pour le créer manuellement :&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;docker create -v /data --name data ubuntu:14.10 /bin/true&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;J&amp;rsquo;utilise ubuntu:14.10, c&amp;rsquo;est une image que j&amp;rsquo;utilise déjà avec un autre conteneur, cela m&amp;rsquo;évite d&amp;rsquo;utiliser de l&amp;rsquo;espace disque pour rien.
+Le conteneur de données est utilisé pour stocker le &amp;ldquo;static&amp;rdquo; du projet Django, ainsi que les fichiers de redis (persistance de données pour Celery).
+&lt;br/&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;compose:48b80581519ee5b4f1eaab835a4ece73&#34;&gt;COMPOSE&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;docker-compose.yml&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;db:
+  image: jamesbrink/postgresql
+  environment:
+    - SCHEMA=example
+    - USER=example
+    - PASSWORD=password
+    - POSTGIS=true
+
+rediscache:
+  image: redis:latest
+
+rediscelery:
+  image: redis:latest
+  volumes_from:
+    - data
+
+app:
+  build: .
+  command: /usr/bin/supervisord -n
+  volumes:
+    - ./docker_config/supervisor.conf:/etc/supervisor/conf.d/myconf.conf
+    - ./docker_config/start.sh:/code/start.sh
+    - ./docker_config/start_cel.sh:/code/start_cel.sh
+    - ./project:/code
+  volumes_from:
+    - data
+  links:
+    - db
+    - rediscache
+    - rediscelery
+
+nginx:
+  image: nginx:latest
+  volumes:
+    - ./docker_config/myconf.nginx:/etc/nginx/nginx.conf
+  volumes_from:
+    - data
+  ports:
+    - &amp;quot;80:80&amp;quot;
+  links:
+    - app
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Nous avons donc 5 conteneurs dans le fichier (6 avec le conteneur de données créé plus haut)  :&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;app avec :&lt;br /&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Django&lt;/li&gt;
+&lt;li&gt;Gunicorn&lt;/li&gt;
+&lt;li&gt;Celery&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;db avec PostgreSQL&lt;/li&gt;
+&lt;li&gt;Nginx&lt;/li&gt;
+&lt;li&gt;rediscache pour le cache de Django (sessions&amp;hellip;)&lt;/li&gt;
+&lt;li&gt;rediscelery broker celery avec persistance de données&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;lancement:48b80581519ee5b4f1eaab835a4ece73&#34;&gt;Lancement&lt;/h3&gt;
+
+&lt;p&gt;Pour créer les conteneurs :&lt;br /&gt;
+&lt;code&gt;docker-compose up -d&lt;/code&gt; (-d pour lancer en mode détaché)&lt;/p&gt;
+
+&lt;p&gt;Pour démarrer les conteneurs déjà créés, il faut utiliser &lt;code&gt;docker-compose start&lt;/code&gt;, si vous utilisez &lt;code&gt;up&lt;/code&gt;, ils vont se recréer.&lt;/p&gt;
+
+&lt;p&gt;Il est possible de vouloir recréer un conteneur spécifique :&lt;br /&gt;
+&lt;code&gt;docker-compose up --no-deps container_name&lt;/code&gt; (&amp;ndash;no-deps signifie que l&amp;rsquo;on ne veut pas recréer les conteneurs liés)
+&lt;br/&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;comment-utiliser-les-conteneurs-entre-eux:48b80581519ee5b4f1eaab835a4ece73&#34;&gt;Comment utiliser les conteneurs entre eux ?&lt;/h4&gt;
+
+&lt;p&gt;Pour pouvoir utiliser par exemple PostgreSQL ou Redis depuis mon conteneur &lt;code&gt;app&lt;/code&gt;, il n&amp;rsquo;y a pas besoin de connaître l&amp;rsquo;ip. On peut utiliser juste le nom du conteneur.
+&lt;code&gt;&#39;HOST&#39;: &#39;db&#39;&lt;/code&gt; ou &lt;code&gt;BROKER_URL = &#39;redis://rediscelery:6379/0&#39;&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;En effet, Compose remplit le fichier hosts des conteneurs.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;root@a230dcd1741c:/code# cat /etc/hosts
+127.0.0.1	localhost
+172.17.0.68	rediscelery_1
+172.17.0.69	dockercomposeexample_db_1
+172.17.0.70	rediscache
+172.17.0.70	rediscache_1
+172.17.0.68	rediscelery
+172.17.0.69	db
+172.17.0.69	db_1
+172.17.0.70	dockercomposeexample_rediscache_1
+172.17.0.68	dockercomposeexample_rediscelery_1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Il est bien entendu possible d&amp;rsquo;utiliser moins de conteneurs. J&amp;rsquo;ai choisi d&amp;rsquo;avoir deux conteneurs redis parce qu&amp;rsquo;ils ont une configuration différente, choix discutable. Il est également possible d&amp;rsquo;avoir Nginx dans le conteneur &amp;ldquo;app&amp;rdquo;. Néanmoins, si vous voulez utiliser Nginx comme load balancer entre plusieurs conteneurs de votre application, il faut le laisser dans un conteneur à part.
+&lt;br/&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;optimisation:48b80581519ee5b4f1eaab835a4ece73&#34;&gt;Optimisation&lt;/h3&gt;
+
+&lt;p&gt;Compose gère la plupart des paramètres de Docker. Ainsi, la gestion des ressources se fait via &lt;code&gt;mem_limit&lt;/code&gt; pour la mémoire, &lt;code&gt;cpu_shares&lt;/code&gt;pour le cpu.&lt;/p&gt;
+
+&lt;p&gt;Exemple :&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;db:
+  image: jamesbrink/postgresql
+  mem_limit:100m
+  cpu_shares:50
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;pour-conclure:48b80581519ee5b4f1eaab835a4ece73&#34;&gt;Pour conclure&lt;/h3&gt;
+
+&lt;p&gt;Pour &amp;ldquo;entrer&amp;rdquo; dans un conteneur et avoir un shell (&lt;a href=&#34;http://jpetazzo.github.io/2014/06/23/docker-ssh-considered-evil/&#34;&gt;If you run SSHD in your Docker containers, you&amp;rsquo;re doing it wrong!)&lt;/a&gt;, la façon la plus simple est de lancer cette commande :&lt;br /&gt;
+&lt;code&gt;docker exec -it id_container bash&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Néanmoins, vous trouverez sur ce &lt;a href=&#34;http://programster.blogspot.fr/2014/01/docker-enter-running-container.html&#34;&gt;site&lt;/a&gt;, un petit script pour raccourcir la commande à :&lt;br /&gt;
+&lt;code&gt;docker-enter idcontainer&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;C&amp;rsquo;est quand même plus cool !&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://github.com/pabardina/docker-compose-django&#34;&gt;Git du projet &lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Cet article est susceptible d&amp;rsquo;être modifié au fur et à mesure des mises à jour de Docker, de Compose et des mes expériences.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Django REST Framework : Authentification</title>
+      <link>http://localhost:1313/post/django-rest-framework-auth/</link>
+      <pubDate>Sat, 09 May 2015 15:28:00 +0200</pubDate>
+      
+      <guid>http://localhost:1313/post/django-rest-framework-auth/</guid>
+      <description>
+
+&lt;h1 id=&#34;introduction:dd1d22b0f98c8f156f2038b225be60af&#34;&gt;Introduction&lt;/h1&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Django REST framework is a powerful and flexible toolkit that makes it easy to build Web APIs.&lt;br /&gt;
+&lt;a href=&#34;http://www.django-rest-framework.org/&#34;&gt;http://www.django-rest-framework.org/&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Le but de cet article est de présenter Django REST framework avec un exemple.&lt;/p&gt;
+
+&lt;p&gt;Pour ce premier article, il y aura l&amp;rsquo;application d&amp;rsquo;authentification du projet avec :&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;extension du modèle user de django&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;authentification avec username ou email avec gestion token pour les requêtes&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;requêtes GET/POST/PATCH/DELETE sur modèle user&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Les sources du tutorial sont sur mon &lt;strong&gt;&lt;a href=&#34;https://github.com/pabardina/django-course/&#34;&gt;github&lt;/a&gt;&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Il est nécessaire pour bien comprendre le tutorial d&amp;rsquo;avoir un minimum de bases avec Django.
+&lt;br/&gt;&lt;/p&gt;
+
+&lt;h1 id=&#34;mise-en-place:dd1d22b0f98c8f156f2038b225be60af&#34;&gt;Mise en place&lt;/h1&gt;
+
+&lt;p&gt;On commence par créer un nouveau projet :&lt;br /&gt;
+&lt;code&gt;django-admin startproject examplename&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;On installe &lt;a href=&#34;http://www.django-rest-framework.org/#installation&#34;&gt;Django REST framework&lt;/a&gt; :&lt;br /&gt;
+&lt;code&gt;pip install djangorestframework&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Et on l&amp;rsquo;ajoute dans les INSTALLED_APPS :&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;INSTALLED_APPS = (
+    ...
+    &#39;rest_framework&#39;,
+)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Il y a également des paramètres à mettre dans votre fichiers settings.py, tout dépend de comment vous souhaitez l&amp;rsquo;utiliser.&lt;/p&gt;
+
+&lt;p&gt;Exemple de mon fichier &lt;a href=&#34;https://github.com/pabardina/django-course/blob/master/course/config/settings.py&#34;&gt;settings.py&lt;/a&gt; :&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;REST_FRAMEWORK = {
+
+    &#39;DEFAULT_AUTHENTICATION_CLASSES&#39;: (
+        &#39;rest_framework.authentication.BasicAuthentication&#39;,
+        &#39;rest_framework.authentication.TokenAuthentication&#39;, #  on utilise une authentification avec token, il est possible d&#39;utiliser Oauth2.
+    ),
+
+    &#39;DEFAULT_RENDERER_CLASSES&#39;: (
+        &#39;rest_framework.renderers.JSONRenderer&#39;,
+        &#39;rest_framework.renderers.XMLRenderer&#39;,
+        &#39;rest_framework.renderers.BrowsableAPIRenderer&#39;,
+        &#39;rest_framework.renderers.YAMLRenderer&#39;,
+    ), 
+
+    &#39;DEFAULT_PERMISSION_CLASSES&#39;: (
+        &#39;rest_framework.permissions.IsAuthenticated&#39;, #  par défaut, toutes les requêtes auront besoin du token
+    ),
+
+    &#39;TEST_REQUEST_DEFAULT_FORMAT&#39;: &#39;json&#39;,
+
+    &#39;TEST_REQUEST_RENDERER_CLASSES&#39;: (
+        &#39;rest_framework.renderers.MultiPartRenderer&#39;,
+        &#39;rest_framework.renderers.JSONRenderer&#39;,
+        &#39;rest_framework.renderers.YAMLRenderer&#39;
+    )
+}
+
+CORS_ORIGIN_ALLOW_ALL = True
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;utilisation-d-un-modèle-utilisateur-personnalisé:dd1d22b0f98c8f156f2038b225be60af&#34;&gt;Utilisation d&amp;rsquo;un modèle utilisateur personnalisé&lt;/h3&gt;
+
+&lt;p&gt;Une fois votre projet Django configuré aux petits &lt;a href=&#34;http://www.miximum.fr/checklist-bonnes-pratiques-django.html.html&#34;&gt;oignons&lt;/a&gt;, on crée l&amp;rsquo;application authentification :&lt;br /&gt;
+&lt;code&gt;django-admin startapp authentication&lt;/code&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;modèle-account:dd1d22b0f98c8f156f2038b225be60af&#34;&gt;Modèle Account&lt;/h4&gt;
+
+&lt;p&gt;Comme dit plus haut, on va étendre le model utilisateur de Django.
+Dans &lt;code&gt;authentication/models.py&lt;/code&gt; :&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;from django.contrib.auth.models import AbstractBaseUser
+
+
+class Account(AbstractBaseUser):
+    email = models.EmailField(unique=True)
+    username = models.CharField(max_length=40, unique=True)
+    first_name = models.CharField(max_length=70, blank=True)
+    last_name = models.CharField(max_length=70, blank=True)
+    is_admin = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    objects = AccountManager()
+
+    USERNAME_FIELD = &#39;email&#39;
+    REQUIRED_FIELDS = [&#39;username&#39;]
+
+    def __unicode__(self):
+        return self.email + &amp;quot; - &amp;quot; + self.username
+
+    @property
+    def is_superuser(self):
+        return self.is_admin
+
+    @property
+    def is_staff(self):
+        return self.is_admin
+
+    def has_perm(self, perm, obj=None):
+        return self.is_admin
+
+    def has_module_perms(self, app_label):
+        return self.is_admin
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Simple modèle qui hérite de AbstractBaseUser.
+&lt;br/&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;accountmanager:dd1d22b0f98c8f156f2038b225be60af&#34;&gt;AccountManager&lt;/h4&gt;
+
+&lt;p&gt;Il nous reste à coder le manager dans le même fichier :&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;from django.contrib.auth.models import  BaseUserManager
+
+
+class AccountManager(BaseUserManager):
+    def create_user(self, email, password=None, **kwargs):
+        if not email:
+            raise ValueError(&#39;Users must have a valid email address.&#39;)
+
+        if not kwargs.get(&#39;username&#39;):
+            raise ValueError(&#39;Users must have a valid username.&#39;)
+
+        account = self.model(
+            email=self.normalize_email(email), username=kwargs.get(&#39;username&#39;)
+        )
+
+        account.set_password(password)
+        account.save()
+
+        return account
+
+    def create_superuser(self, email, password, **kwargs):
+        account = self.create_user(email, password, **kwargs)
+
+        account.is_admin = True
+        account.save()
+
+        return account
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Pour dire à Django d&amp;rsquo;utiliser notre nouveau modèle utilisateur plutôt que le sien, on rajoute dans les settings :&lt;br /&gt;
+&lt;strong&gt;&lt;code&gt;AUTH_USER_MODEL = &#39;authentication.Account&#39;&lt;/code&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Pour en finir avec le fichier &lt;code&gt;authentication/models.py&lt;/code&gt; , il nous faut coder le signals qui à chaque création d&amp;rsquo;utilisateur va créer un token associé (modèle Token de Django rest framework) :&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;authentification-avec-username-ou-email:dd1d22b0f98c8f156f2038b225be60af&#34;&gt;Authentification avec username ou email&lt;/h3&gt;
+
+&lt;p&gt;Je souhaitais mettre en place une authentification avec username ou email, ce qui n&amp;rsquo;est pas possible de base avec Django, mais qui est très facile à faire.&lt;/p&gt;
+
+&lt;p&gt;Création d&amp;rsquo;un fichier &lt;strong&gt;&lt;code&gt;authentication/auth_backend.py&lt;/code&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;from django.conf import settings
+from django.contrib.auth import get_user_model
+
+class EmailOrUsernameModelBackend(object):
+    &amp;quot;&amp;quot;&amp;quot;
+    This is a ModelBacked that allows authentication with either a username or an email address.
+
+    &amp;quot;&amp;quot;&amp;quot;
+    def authenticate(self, username=None, password=None):
+        if &#39;@&#39; in username:
+            kwargs = {&#39;email&#39;: username}
+        else:
+            kwargs = {&#39;username&#39;: username}
+        try:
+            user = get_user_model().objects.get(**kwargs)
+            if user.check_password(password):
+                return user
+        except get_user_model().DoesNotExist:
+            return None
+
+    def get_user(self, username):
+        try:
+            return get_user_model().objects.get(pk=username)
+        except get_user_model().DoesNotExist:
+            return None
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Il faut maintenant changer le &lt;strong&gt;&lt;code&gt;AUTHENTICATION_BACKENDS&lt;/code&gt;&lt;/strong&gt; :&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;AUTHENTICATION_BACKENDS = (
+	&#39;authentication.auth_backend.EmailOrUsernameModelBackend&#39;,
+)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;one-more-time:dd1d22b0f98c8f156f2038b225be60af&#34;&gt;One more time&lt;/h3&gt;
+
+&lt;p&gt;Et pour que tout marche, un coup de migration :&lt;br /&gt;
+&lt;code&gt;python manage.py makemigrations&lt;/code&gt;&lt;br /&gt;
+&lt;code&gt;python manage.py migrate&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;serialization-de-notre-modèle-account:dd1d22b0f98c8f156f2038b225be60af&#34;&gt;Serialization de notre modèle Account&lt;/h2&gt;
+
+&lt;p&gt;Avant d&amp;rsquo;entrée dans le vif du sujet, je vous laisse voir la &lt;a href=&#34;http://www.django-rest-framework.org/api-guide/serializers/&#34;&gt;documentation officiel de Django REST framework sur les serializers&lt;/a&gt;, ce qui vous permettra de mieux comprendre la suite du tutorial.&lt;/p&gt;
+
+&lt;p&gt;Le serializer de l&amp;rsquo;application ressemble à :&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;# django import
+from django.contrib.auth import update_session_auth_hash
+# Django REST Framework import
+from rest_framework import serializers
+# authentication app import
+from authentication.models import Account
+
+class AccountSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=False)
+    confirm_password = serializers.CharField(write_only=True, required=False)
+
+    def __init__(self, *args, **kwargs):
+        super(AccountSerializer, self).__init__(*args, **kwargs)
+
+        if self.context.get(&amp;quot;request&amp;quot;):
+            self.request = self.context[&#39;request&#39;]
+            if not self.request.method == &amp;quot;POST&amp;quot;:
+                del self.fields[&#39;auth_token&#39;]
+
+    class Meta:
+        model = Account
+        fields = (&#39;id&#39;, &#39;email&#39;, &#39;username&#39;, &#39;created_at&#39;, &#39;updated_at&#39;,
+                  &#39;first_name&#39;, &#39;last_name&#39;, &#39;password&#39;, &#39;confirm_password&#39;,
+                  &#39;auth_token&#39;)
+        read_only_fields = (&#39;created_at&#39;, &#39;updated_at&#39;, &#39;auth_token&#39;)
+
+        def create(self, validated_data):
+            return Account.objects.create(**validated_data)
+
+        def update(self, instance, validated_data):
+            instance.username = validated_data.get(&#39;username&#39;,
+                                                   instance.username)
+
+            instance.save()
+
+            password = validated_data.get(&#39;password&#39;, None)
+            confirm_password = validated_data.get(&#39;confirm_password&#39;, None)
+
+            if password and confirm_password and password == confirm_password:
+                instance.set_password(password)
+                instance.save()
+
+            update_session_auth_hash(self.context.get(&#39;request&#39;), instance)
+
+            return instance
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Comme je souhaite que toutes mes requêtes soient authentifiées, j&amp;rsquo;ai besoin du champ &lt;code&gt;auth_token&lt;/code&gt; sauf lors d&amp;rsquo;une requête POST sur mon modèle (inscription d&amp;rsquo;un utilisateur). C&amp;rsquo;est ce que je fais dans la méthode &lt;code&gt;__init__&lt;/code&gt; :&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;def __init__(self, *args, **kwargs):
+    super(AccountSerializer, self).__init__(*args, **kwargs)
+
+    if self.context.get(&amp;quot;request&amp;quot;):
+        self.request = self.context[&#39;request&#39;]
+        if self.request.method == &amp;quot;POST&amp;quot;:
+            del self.fields[&#39;auth_token&#39;]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;permissions:dd1d22b0f98c8f156f2038b225be60af&#34;&gt;Permissions&lt;/h3&gt;
+
+&lt;p&gt;Avant de passer au fichier des &lt;strong&gt;&lt;code&gt;views.py&lt;/code&gt;&lt;/strong&gt;, pour le besoin de l&amp;rsquo;application, j&amp;rsquo;ai codé une permission supplémentaire. N&amp;rsquo;hésitez pas à aller voir la &lt;a href=&#34;http://www.django-rest-framework.org/api-guide/permissions/&#34;&gt;documentation de Django REST framework pour les permissions&lt;/a&gt;, la plupart des besoins sont couverts, et en rajouter des personnalisés est très simple, la preuve :&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;from rest_framework import permissions
+ 
+class IsOwner(permissions.BasePermission):
+    &amp;quot;&amp;quot;&amp;quot;
+    Custom permission to only allow owner of an object to use it.
+    &amp;quot;&amp;quot;&amp;quot;
+
+    def has_object_permission(self, request, view, obj):
+        if hasattr(obj, &#39;auth_token&#39;) and hasattr(request.auth, &#39;key&#39;) and not request.method == &amp;quot;GET&amp;quot;:
+            return obj.auth_token.key == request.auth.key
+        elif request.method == &#39;POST&#39; or request.method == &amp;quot;GET&amp;quot;:
+            return permissions.AllowAny(),
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;et-voilà-les-views:dd1d22b0f98c8f156f2038b225be60af&#34;&gt;Et voilà les &amp;hellip;. views !&lt;/h3&gt;
+
+&lt;p&gt;Les views sont un sujet assez vaste avec Django REST framework. Plusieurs choix sont possibles. Je vous laisse en juger par vous &lt;a href=&#34;http://www.django-rest-framework.org/api-guide/views/&#34;&gt;mêmes&lt;/a&gt;.  Pour ma part, j&amp;rsquo;utilise les &lt;a href=&#34;http://www.django-rest-framework.org/api-guide/viewsets/#modelviewset&#34;&gt;modelViewSet&lt;/a&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;account-view:dd1d22b0f98c8f156f2038b225be60af&#34;&gt;Account view&lt;/h4&gt;
+
+&lt;p&gt;Commençons par le modelViewSet de notre modèle Account.
+Ouvrez donc le fichier &lt;strong&gt;&lt;code&gt;authentication/views.py&lt;/code&gt;&lt;/strong&gt; :&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;from rest_framework import permissions, viewsets, authentication
+from rest_framework import status, views
+from rest_framework.response import Response
+
+from authentication.models import Account
+from authentication.serializers import AccountSerializer
+from authentication.permissions import IsOwner
+
+
+class AccountViewSet(viewsets.ModelViewSet):
+    &amp;quot;&amp;quot;&amp;quot; Account resource. &amp;quot;&amp;quot;&amp;quot;
+    queryset = Account.objects.all()
+    serializer_class = AccountSerializer
+    authentication_classes = authentication.TokenAuthentication,
+    permission_classes = IsOwner,
+
+    def create(self, request):
+        &amp;quot;&amp;quot;&amp;quot;
+        Create an account
+
+        &amp;quot;&amp;quot;&amp;quot;
+        serializer = self.serializer_class(data=request.data,
+                                           context={&#39;request&#39;: request})
+
+        if serializer.is_valid():
+            account = Account.objects.create_user(**serializer.validated_data)
+            serializer_with_token = AccountSerializer(
+                account, context={&#39;request&#39;: request})
+            return Response(serializer_with_token.data,
+                            status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    def list(self, request, *args, **kwargs):
+        &amp;quot;&amp;quot;&amp;quot;
+        Return a list of accounts.
+
+        &amp;quot;&amp;quot;&amp;quot;
+        return super(AccountViewSet, self).list(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        &amp;quot;&amp;quot;&amp;quot;
+        Update an object with all fields required
+
+        &amp;quot;&amp;quot;&amp;quot;
+        return super(AccountViewSet, self).update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        &amp;quot;&amp;quot;&amp;quot;
+        Update an object with specific field
+
+        &amp;quot;&amp;quot;&amp;quot;
+        return super(AccountViewSet, self).partial_update(request, *args,
+                                                          **kwargs)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Comme vous pouvez le constater, il y a très peu de code. Les attributs sont &lt;strong&gt;importants&lt;/strong&gt; :&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;queryset = Account.objects.all() #  on récupère tout, on filtrera en fonction des droits
+serializer_class = AccountSerializer #  notre serializer codé plus haut
+authentication_classes = authentication.TokenAuthentication, #  le token sera nécessaire pour les requêtes
+permission_classes = IsOwner,
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;exemple-login-view:dd1d22b0f98c8f156f2038b225be60af&#34;&gt;Exemple login view&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;
+class LoginView(views.APIView):
+    &amp;quot;&amp;quot;&amp;quot;
+    Login Ressource
+
+    &amp;quot;&amp;quot;&amp;quot;
+    permission_classes = permissions.AllowAny,
+
+    def post(self, request, format=None):
+        &amp;quot;&amp;quot;&amp;quot;
+        Two arguments:
+        username &amp;amp; password
+        &amp;quot;&amp;quot;&amp;quot;
+        data = request.DATA
+
+        username = data.get(&#39;username&#39;, None)
+        password = data.get(&#39;password&#39;, None)
+
+        account = authenticate(username=username, password=password)
+
+        if account is not None:
+            if account.is_active:
+                login(request, account)
+
+                serialized = AccountSerializer(account)
+
+                return Response(serialized.data)
+            else:
+                return Response({
+                    &#39;status&#39;: &#39;Unauthorized&#39;,
+                    &#39;message&#39;: &#39;This account has been disabled.&#39;
+                }, status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            return Response({
+                &#39;status&#39;: &#39;Unauthorized&#39;,
+                &#39;message&#39;: &#39;Username/password combination invalid.&#39;
+            }, status=status.HTTP_401_UNAUTHORIZED)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;exemple-logout-view:dd1d22b0f98c8f156f2038b225be60af&#34;&gt;Exemple logout view&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;
+class LogoutView(views.APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    &amp;quot;&amp;quot;&amp;quot;
+    Logout Ressource
+    &amp;quot;&amp;quot;&amp;quot;
+
+    def post(self, request, format=None):
+        &amp;quot;&amp;quot;&amp;quot;
+        Simple Call on /logout in post. No arguments
+
+        &amp;quot;&amp;quot;&amp;quot;
+        logout(request)
+
+        return Response({}, status=status.HTTP_204_NO_CONTENT)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/2015/05/djangorest1.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Sources :&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://thinkster.io/django-angularjs-tutorial/&#34;&gt;https://thinkster.io/django-angularjs-tutorial/&lt;/a&gt;&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.django-rest-framework.org/&#34;&gt;http://www.django-rest-framework.org/&lt;/a&gt;&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/pabardina/django-course/&#34;&gt;https://github.com/pabardina/django-course/&lt;/a&gt;&lt;br /&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Mise en bouche d&#39;Ansible</title>
+      <link>http://localhost:1313/post/mise-en-bouche-ansible/</link>
+      <pubDate>Mon, 04 May 2015 15:28:00 +0200</pubDate>
+      
+      <guid>http://localhost:1313/post/mise-en-bouche-ansible/</guid>
+      <description>
+
+&lt;h2 id=&#34;introduction:81473f409611e5c83acf2fcc91c3c3f0&#34;&gt;Introduction&lt;/h2&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Ansible is a radically simple IT automation platform that makes your applications and systems easier to deploy. Avoid writing scripts or custom code to deploy and update your applications— automate in a language that approaches plain English, using SSH, with no agents to install on remote systems.&lt;br /&gt;
+&lt;a href=&#34;http://www.ansible.com&#34;&gt;http://www.ansible.com&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Outil pour configurer et gérer des serveurs, avec une configuration simple grâce à des &amp;ldquo;playbooks&amp;rdquo; (fichier de configuration), le tout exécuté en SSH.&lt;/p&gt;
+
+&lt;p&gt;Quelques avantages d&amp;rsquo;Ansible :&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Des fichiers en YAML, très facilement utilisable, lisible.&lt;/li&gt;
+&lt;li&gt;Une structure bien pensée avec des rôles comprenant des templates, des fichiers, des variables&amp;hellip;.&lt;/li&gt;
+&lt;li&gt;Une simple installation de l&amp;rsquo;outil sur la machine hôte, tout ce fait en ssh.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br/&gt;
+Le but de cet article va être de déployer une simple application Django (un simple blog par exemple) et de détailler les playbooks d&amp;rdquo;Ansible.&lt;/p&gt;
+
+&lt;p&gt;L&amp;rsquo;adresse du git &lt;a href=&#34;https://github.com/pabardina/ansible-django&#34;&gt;https://github.com/pabardina/ansible-django&lt;/a&gt;
+&lt;br/&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;structure-du-repo-git:81473f409611e5c83acf2fcc91c3c3f0&#34;&gt;Structure du repo git&lt;/h3&gt;
+
+&lt;p&gt;A la racine, on trouve trois fichiers :&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;hosts : qui contient les ip des serveurs&lt;/li&gt;
+&lt;li&gt;vars.yml : qui contient les variables &amp;ldquo;globales&amp;rdquo; du projet, c&amp;rsquo;est à dire nécessaire dans tous les rôles&lt;/li&gt;
+&lt;li&gt;start.yml : qui correspond au fichier de base, c&amp;rsquo;est ce fichier qui sera lancé, et qui appelera les différents rôles&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;On retrouve également un dossier &amp;ldquo;rôles&amp;rdquo; :&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;roles/
+  base/
+    tasks/            #
+      main.yml      #  &amp;lt;-- fichier lu en premier dans ce rôle, qui va contenir différentes actions
+    web/               # &amp;lt;-- web role (django, celery, memcached)
+      files/ #
+        main.yml #
+      handlers/
+      tasks/            #
+         main.yml      #  &amp;lt;-- fichier lu en premier dans ce rôle, qui va contenir différentes actions
+      templates/        #  &amp;lt;-- dossier templates
+        zshrc.in   #  &amp;lt;------- template pour le fichier zshrc
+      vars/
+        main.yml
+start.yml
+vars.yml
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br/&gt;
+Extrait du fichier roles/base/tasks/main.yml :&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;- name: Install base packages
+  apt: name={{ item }} update_cache={{ update_apt_cache }} force=yes state=installed
+  with_items:
+    - build-essential
+    - ntp
+    - htop
+    - git
+    - tig
+    - tmux
+    - ncdu
+    - python-dev
+    - python-pip
+    - python-pycurl
+    - python3-dev
+    - supervisor
+  tags: packages
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Dans cet extrait, on va installer les paquets de la liste, et s&amp;rsquo;assurant que le gestionnaire de paquets soit à jour.
+&lt;br/&gt;&lt;/p&gt;
+
+&lt;p&gt;D&amp;rsquo;autres possibilités existe :&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;- name: Create the application user
+  user: name={{ gunicorn_user }} state=present
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br/&gt;
+Création d&amp;rsquo;un utilisateur, dont le nom est une variable (gunicorn_user) contenu dans le fichier vars.yml à la racine du repo.&lt;/p&gt;
+
+&lt;p&gt;La variable : &lt;code&gt;gunicorn_user: test&lt;/code&gt;
+&lt;br/&gt;&lt;/p&gt;
+
+&lt;p&gt;Fichier template (roles/web/templates/local_settings.py) :&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;DATABASES = {
+    &amp;quot;default&amp;quot;: {
+        &amp;quot;ENGINE&amp;quot;: &amp;quot;django.db.backends.postgresql_psycopg2&amp;quot;,
+        &amp;quot;NAME&amp;quot;: &amp;quot;{{ db_name }}&amp;quot;,
+        &amp;quot;USER&amp;quot;: &amp;quot;{{ db_user }}&amp;quot;,
+        &amp;quot;PASSWORD&amp;quot;: &amp;quot;{{ db_password }}&amp;quot;,
+        &amp;quot;HOST&amp;quot;: &amp;quot;localhost&amp;quot;,
+        &amp;quot;PORT&amp;quot;: &amp;quot;&amp;quot;,
+    }
+}
+STATIC_ROOT = &amp;quot;/webapps/{{ application_name }}/static&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;ansible-et-django:81473f409611e5c83acf2fcc91c3c3f0&#34;&gt;Ansible et Django&lt;/h3&gt;
+
+&lt;p&gt;Un module Django existe pour Ansible, ce qui permet l&amp;rsquo;utilisation de manage.py, c&amp;rsquo;est simple, facile et c&amp;rsquo;est cool.
+&lt;a href=&#34;http://docs.ansible.com/django_manage_module.html&#34;&gt;http://docs.ansible.com/django_manage_module.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Exemple de &lt;code&gt;manage.py migrate&lt;/code&gt; dans le fichier /roles/web/tasks/setup_django_app.yml&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;- name: Run Django migrations
+  django_manage:
+    command: migrate
+    app_path: &amp;quot;{{ application_path }}&amp;quot;
+    virtualenv: &amp;quot;{{ virtualenv_path }}&amp;quot;
+    settings: &amp;quot;{{ django_settings_file }}&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;installation-et-configuration:81473f409611e5c83acf2fcc91c3c3f0&#34;&gt;Installation et configuration&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Sur la machine hôte :&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;sudo pip install ansible&lt;/code&gt;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Ensuite, comme dit précédemment, Ansible utilise ssh, il faut donc ajouter notre certificat ssh sur la machine distante :&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;ssh-copy-id root@xx.xx.xx.xx&lt;/code&gt;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Ajouter l&amp;rsquo;ip de votre serveur dans le fichiers &lt;code&gt;hosts&lt;/code&gt;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Un dernier test :&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;ansible all -m ping -u root&lt;/code&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;utilisation:81473f409611e5c83acf2fcc91c3c3f0&#34;&gt;Utilisation&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;ansible-playbook -i hosts start.yml -vvv&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Explication de la commande:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;le &lt;code&gt;-i&lt;/code&gt; permet de spécifier l&amp;rsquo;endroit du fichier qui contient les ip&lt;/li&gt;
+&lt;li&gt;le &lt;code&gt;-vvv&lt;/code&gt; permet de verbose mode plus détaillé que le simple -v&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Repo git basé sur &lt;a href=&#34;https://github.com/jcalazan/ansible-django-stack&#34;&gt;https://github.com/jcalazan/ansible-django-stack&lt;/a&gt; très bien fait, avec des rôles en plus :&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;celery&lt;/li&gt;
+&lt;li&gt;memcached&lt;/li&gt;
+&lt;li&gt;rabbitmq&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;N&amp;rsquo;hésitez pas à y faire un saut, ça vaut le coup.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Ajout d&#39;actions dans l&#39;admin Django</title>
+      <link>http://localhost:1313/post/ajout-dactions-dans-ladmin-django/</link>
+      <pubDate>Fri, 01 May 2015 14:42:00 +0200</pubDate>
+      
+      <guid>http://localhost:1313/post/ajout-dactions-dans-ladmin-django/</guid>
+      <description>
+
+&lt;h1 id=&#34;ajouter-des-actions:6b3bd665a84533850efb913183493d52&#34;&gt;Ajouter des actions&lt;/h1&gt;
+
+&lt;p&gt;Pour ajouter des actions personnalisées dans l&amp;rsquo;administration de Django, il est nécessaire d&amp;rsquo;éditer le fichier &lt;code&gt;admin.py&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Prenons par exemple, dans une application &lt;a href=&#34;https://github.com/pabardina/django-blog&#34;&gt;blog&lt;/a&gt;, une action qui va publier tous les articles sélectionnés.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/2015/05/admin_1.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;class ArticleAdmin(admin.ModelAdmin):
+    actions = (&#39;publish_event&#39;,)
+
+    def publish_event(self, request, queryset):
+        for article in queryset:
+            if article.published:
+                article.published = False
+            else:
+                article.published = True
+                article.save()
+        return
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Pour ce faire, il a fallu rajouter une méthode &lt;code&gt;publish_event&lt;/code&gt; dans notre exemple.&lt;/p&gt;
+
+&lt;p&gt;La documentation de Django étant très bien faite, pour aller plus loin, n&amp;rsquo;hésitez pas à y faire un &lt;a href=&#34;https://docs.djangoproject.com/en/1.7/ref/contrib/admin/actions/&#34;&gt;tour&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;#Ajouter un lien dans un list_display&lt;/p&gt;
+
+&lt;p&gt;Dernièrement, j&amp;rsquo;avais besoin de rajouter dans la liste d&amp;rsquo;objets d&amp;rsquo;un model, un lien pour voir l&amp;rsquo;objet en front.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/2015/05/admin_2.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Il a fallu comme pour ajouter une action, rajouter une méthode dans ma classe admin :&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;class ExampleAdmin(admin.ModelAdmin):
+    list_display = (&#39;name&#39;, &#39;link_front&#39;)
+
+    def link_front(self, form):
+        return &amp;quot;&amp;lt;a href=&#39;http://localhost:1313/view/%s&#39;&amp;gt;click me&amp;lt;/a&amp;gt;&amp;quot; % form.id
+    link_front.allow_tags = True
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Traduire vos applications Django avec Rosetta</title>
+      <link>http://localhost:1313/post/traduire-vos-applications-django-avec-rosetta/</link>
+      <pubDate>Fri, 01 May 2015 10:00:00 +0200</pubDate>
+      
+      <guid>http://localhost:1313/post/traduire-vos-applications-django-avec-rosetta/</guid>
+      <description>
+
+&lt;h3 id=&#34;introduction:0e9c183430548dc648dc8268eced6ce0&#34;&gt;Introduction&lt;/h3&gt;
+
+&lt;p&gt;Afin de traduire des applications Django, nous allons utiliser &lt;a href=&#34;https://github.com/mbi/django-rosetta&#34; target=&#34;_blank&#34;&gt;Rosetta&lt;/a&gt;.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Rosetta est une application Django qui facilite le processus de traduction de vos projets.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Pour ce faire, il est nécessaire d&amp;rsquo;utiliser au préalable d&amp;rsquo;avoir dans son projet des clées de langues :&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Dans les fichiers html, on utilise la syntaxte &lt;code&gt;{{ _(&amp;quot;lang&amp;quot;) }}&lt;/code&gt;.
+Si vous avez une erreur avec le &lt;code&gt;_&lt;/code&gt;  vous devez dans votre fichier &lt;code&gt;base.html&lt;/code&gt;, ajoutez : &lt;code&gt;{% load i18n %}&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Dans les vues, on utilise la syntaxte &lt;code&gt;_(&amp;quot;key&amp;quot;)&lt;/code&gt; après avoir importé &lt;code&gt;from django.utils.translation import ugettext_lazy as _&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;hr /&gt;
+
+&lt;h3 id=&#34;installation:0e9c183430548dc648dc8268eced6ce0&#34;&gt;Installation&lt;/h3&gt;
+
+&lt;p&gt;Pour commencer, vous devez l&amp;rsquo;installer :&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;&lt;code&gt;pip install django-rosetta&lt;/code&gt;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Ajouter &lt;code&gt;Rosetta&lt;/code&gt; à &lt;code&gt;INSTALLED_APPS&lt;/code&gt; dans votre fichier &lt;code&gt;settings.py&lt;/code&gt;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Dans votre fichier urls.py, ajoutez par exemple :&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;from django.conf import settings
+
+if &#39;rosetta&#39; in settings.INSTALLED_APPS:
+    urlpatterns += patterns(&#39;&#39;,
+        url(r&#39;^rosetta/&#39;, include(&#39;rosetta.urls&#39;)),
+    )
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Vous pouvez donc accéder à votre application rosetta à l&amp;rsquo;adresse suivante: &lt;a href=&#34;http://localhost:8000/rosetta&#34; target=&#34;_blank&#34;&gt;&lt;a href=&#34;http://localhost:8000/rosetta&#34;&gt;http://localhost:8000/rosetta&lt;/a&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Vous devez également rajouter quelques lignes dans votre fichier &lt;code&gt;settings.py&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;LANGUAGE_CODE = &#39;fr-fr&#39; # langue par défaut de votre site
+
+LANGUAGES = (
+    (&amp;quot;fr&amp;quot;, &#39;Francais&#39;),
+    (&amp;quot;en&amp;quot;, &amp;quot;Anglais&amp;quot;),
+)
+
+USE_I18N = True # pour activer l&#39;internationalisation
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;hr /&gt;
+
+&lt;h3 id=&#34;utilisation:0e9c183430548dc648dc8268eced6ce0&#34;&gt;Utilisation&lt;/h3&gt;
+
+&lt;p&gt;Pour le moment, votre application n&amp;rsquo;apparaît pas dans rosetta, c&amp;rsquo;est normal. Pour y remédier, vous avez besoin de créer les répertoires &lt;code&gt;locale&lt;/code&gt;, et de générer les fichiers lang.&lt;/p&gt;
+
+&lt;p&gt;Pour ce faire, créer dans chacune de vos applications à traduire, un dossier &lt;code&gt;locale&lt;/code&gt;, ainsi que les dossiers dans lesquels vous voulez traduire l&amp;rsquo;application.&lt;/p&gt;
+
+&lt;p&gt;Par exemple, dans mon projet &lt;code&gt;test&lt;/code&gt;, je veux traduire mon application &lt;code&gt;blog&lt;/code&gt; en français et en anglais :&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;&lt;code&gt;cd test/blog&lt;/code&gt;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;mkdir -p locale/{fr,en}&lt;/code&gt;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Génération des fichiers langues : &lt;code&gt;django-admin.py makemessages&lt;/code&gt;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Reconnectez vous sur rosetta, et vous pourrez dès à présent voir votre application, avec la possibilité de la traduire.&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Dans votre fichier &lt;code&gt;settings.py&lt;/code&gt;, vous avez la possibilité de configurer rosetta pour par exemple, gérer le nombre de clées à traduire par page, exclure une application..&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;ROSETTA_MESSAGES_PER_PAGE = 50
+ROSETTA_EXCLUDED_APPLICATIONS = [&#39;rosetta&#39;] # pour ne pas l&#39;afficher dans les applications à traduire
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Voila, c&amp;rsquo;est tout, si vous voulez tester, changer la langue de votre navigateur.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
