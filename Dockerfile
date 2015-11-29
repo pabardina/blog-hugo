@@ -1,11 +1,6 @@
 FROM debian:wheezy
 MAINTAINER pa@bardina.net
 
-# Install pygments (for syntax highlighting) 
-RUN apt-get -qq update \
-  && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y --no-install-recommends python-pygments \
-  && rm -rf /var/lib/apt/lists/*
-
 ENV HUGO_VERSION 0.15
 ENV HUGO_BINARY hugo_${HUGO_VERSION}_linux_amd64
 
