@@ -12,7 +12,7 @@ aliases = [
 Pour ajouter des actions personnalisées dans l'administration de Django, il est nécessaire d'éditer le fichier `admin.py`.
 
 Prenons par exemple, dans une application [blog](https://github.com/pabardina/django-blog), une action qui va publier tous les articles sélectionnés.
-
+<!--more-->
 ![](/images/2015/05/admin_1.png)
 
 ```python

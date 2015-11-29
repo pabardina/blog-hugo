@@ -105,7 +105,7 @@ EXPOSE 1313
 CMD hugo server --watch --baseUrl=${HUGO_BASE_URL} --port=1313 --appendPort=False --bind=0.0.0.0
 </code></pre>
 
-<p>Architecture :</p>
+<p><u>Architecture du repository :</u></p>
 
 <p><img src="/img/docker-tutum-hugo/architecture.png" alt="Architecture blog" /></p>
 
@@ -219,6 +219,11 @@ Sur l&rsquo;interface du Docker Hub, allez dans la partie &ldquo;<strong>Webhook
 <p><img src="/img/docker-tutum-hugo/finish.png" alt="Create Webhook on Hub" /></p>
 
 <p>Fini ! Maintenant, lorsque vous effectuerez une modification sur votre blog, une nouvelle image sera crée, votre conteneur en production sera détruit, et un nouveau sera déployé.</p>
+
+<ul>
+<li><a href="https://github.com/pabardina/blog-hugo">Github</a></li>
+<li><a href="https://hub.docker.com/r/pabardina/blog">Docker hub</a></li>
+</ul>
 
   </div>
   

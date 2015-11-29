@@ -14,6 +14,7 @@ Afin de traduire des applications Django, nous allons utiliser <a href="https://
 > Rosetta est une application Django qui facilite le processus de traduction de vos projets.
 
 Pour ce faire, il est nécessaire d'utiliser au préalable d'avoir dans son projet des clées de langues :
+<!--more-->
 
 1. Dans les fichiers html, on utilise la syntaxte `{{ _("lang") }}`. 
 Si vous avez une erreur avec le `_`  vous devez dans votre fichier `base.html`, ajoutez : `{% load i18n %}`

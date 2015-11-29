@@ -127,7 +127,12 @@
       <span class="post-date">May 1, 2015 &middot; 1 minute read
       </span>
       
-      Ajouter des actions Pour ajouter des actions personnalisées dans l&rsquo;administration de Django, il est nécessaire d&rsquo;éditer le fichier admin.py. Prenons par exemple, dans une application blog, une action qui va publier tous les articles sélectionnés. class ArticleAdmin(admin.ModelAdmin): actions = ('publish_event',) def publish_event(self, request, queryset): for article in queryset: if article.published: article.published = False else: article.published = True article.save() return Pour ce faire, il a fallu rajouter une méthode publish_event dans notre exemple.
+      <h1 id="ajouter-des-actions:6b3bd665a84533850efb913183493d52">Ajouter des actions</h1>
+
+<p>Pour ajouter des actions personnalisées dans l&rsquo;administration de Django, il est nécessaire d&rsquo;éditer le fichier <code>admin.py</code>.</p>
+
+<p>Prenons par exemple, dans une application <a href="https://github.com/pabardina/django-blog">blog</a>, une action qui va publier tous les articles sélectionnés.</p>
+
       <a href="http://localhost:1313/post/ajout-dactions-dans-ladmin-django/">Read On &rarr;</a>
       
     </div>
@@ -139,7 +144,16 @@
       <span class="post-date">May 1, 2015 &middot; 2 minute read
       </span>
       
-      Introduction Afin de traduire des applications Django, nous allons utiliser Rosetta. Rosetta est une application Django qui facilite le processus de traduction de vos projets. Pour ce faire, il est nécessaire d&rsquo;utiliser au préalable d&rsquo;avoir dans son projet des clées de langues : Dans les fichiers html, on utilise la syntaxte {{ _(&quot;lang&quot;) }}. Si vous avez une erreur avec le _ vous devez dans votre fichier base.html, ajoutez : {% load i18n %} Dans les vues, on utilise la syntaxte _(&quot;key&quot;) après avoir importé from django.utils.translation import ugettext_lazy as _ Installation Pour commencer, vous devez l&rsquo;installer : pip install django-rosetta Ajouter Rosetta à INSTALLED_APPS dans votre fichier settings.py Dans votre fichier urls.py, ajoutez par exemple : from django.conf import settings if 'rosetta' in settings.INSTALLED_APPS: urlpatterns += patterns('', url(r'^rosetta/', include('rosetta.urls')), ) Vous pouvez donc accéder à votre application rosetta à l&rsquo;adresse suivante: http://localhost:8000/rosetta Vous devez également rajouter quelques lignes dans votre fichier settings.py: LANGUAGE_CODE = 'fr-fr' # langue par défaut de votre site LANGUAGES = ( (&quot;fr&quot;, 'Francais'), (&quot;en&quot;, &quot;Anglais&quot;), ) USE_I18N = True # pour activer l'internationalisation Utilisation Pour le moment, votre application n&rsquo;apparaît pas dans rosetta, c&rsquo;est normal.
+      <h3 id="introduction:0e9c183430548dc648dc8268eced6ce0">Introduction</h3>
+
+<p>Afin de traduire des applications Django, nous allons utiliser <a href="https://github.com/mbi/django-rosetta" target="_blank">Rosetta</a>.</p>
+
+<blockquote>
+<p>Rosetta est une application Django qui facilite le processus de traduction de vos projets.</p>
+</blockquote>
+
+<p>Pour ce faire, il est nécessaire d&rsquo;utiliser au préalable d&rsquo;avoir dans son projet des clées de langues :</p>
+
       <a href="http://localhost:1313/post/traduire-vos-applications-django-avec-rosetta/">Read On &rarr;</a>
       
     </div>
