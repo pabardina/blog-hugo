@@ -128,6 +128,10 @@ De plus, si vous allez dans les settings de votre repository Github ( &lt;strong
 &lt;p&gt;Quelques configurations :
 &lt;img src=&#34;http://localhost:1313/img/docker-tutum-hugo/config.png&#34; alt=&#34;Configuration Service Tutum&#34; /&gt;&lt;/p&gt;
 
+&lt;p&gt;Il faut également renseigner la variable d&amp;rsquo;environnement &lt;code&gt;HUGO_BASE_URL&lt;/code&gt; pour ne pas avoir de problème pour le statique du site :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/img/docker-tutum-hugo/env.png&#34; alt=&#34;Environnement variable&#34; /&gt;&lt;/p&gt;
+
 &lt;p&gt;Pour finir, cliquez sur &amp;ldquo;&lt;strong&gt;Create and Deploy&lt;/strong&gt;&amp;ldquo;&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&#34;http://localhost:1313/img/docker-tutum-hugo/deployed.png&#34; alt=&#34;Service deployed&#34; /&gt;&lt;/p&gt;

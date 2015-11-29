@@ -116,6 +116,9 @@ Prochaine étape, création du service, c'est-à-dire déployer le blog sur mon 
 Quelques configurations :
 ![Configuration Service Tutum](/img/docker-tutum-hugo/config.png)
 
+Il faut également renseigner la variable d'environnement `HUGO_BASE_URL` pour ne pas avoir de problème pour le statique du site :
+
+![Environnement variable](/img/docker-tutum-hugo/env.png)
 
 
 Pour finir, cliquez sur "**Create and Deploy**"
