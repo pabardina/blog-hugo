@@ -1,4 +1,4 @@
-Continuous development with Docker and Tutum for my personal blog using Hugo.
+Continuous deployment with Docker and Tutum for my personal blog using Hugo.
 =====
 
 ### Start a container
