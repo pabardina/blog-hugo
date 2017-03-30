@@ -1,16 +1,15 @@
-baseurl = "http://replace-this-with-your-hugo-site.com/"
+baseurl = "https://bardina.net"
 languageCode = "fr-FR"
 title = "Pierre-Alexandre Bardina's blog"
-theme = "hyde-x"
+theme = "ghostwriter"
 
-[author]
+[Author]
   name = "Pierre-Alexandre Bardina"
 
-[params]
+[Params]
   github = "https://github.com/pabardina"
   linkedin = "https://www.linkedin.com/in/pabardina"
   twitter = "https://www.twitter.com/pabardina"
   tagline = "En perpétuelle évolution"
-  theme = "theme-base-0c"
   home = "Blog"
   highlight = "sunburst"
