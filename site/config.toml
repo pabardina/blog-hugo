@@ -1,4 +1,4 @@
-baseurl = "https://bardina.net"
+baseurl = "https://www.bardina.net/"
 languageCode = "fr-FR"
 title = "Pierre-Alexandre Bardina's blog"
 theme = "ghostwriter"
