@@ -80,6 +80,11 @@ Avec le framework [oh-my-Zsh](https://github.com/robbyrussell/oh-my-zsh)
 #### [Termite](https://github.com/thestinger/termite)
 Je l'utilise depuis quelques mois comme terminal, il ne fait rien d'extraordinaire, mais il me convient.
 
+#### [Tmux](https://tmux.github.io/)
+Indispensable si vous passez vos journées dans un terminal.
+
+![Tmux](https://tmux.github.io/ss-tmux1.png)
+
 #### [Ranger](http://ranger.nongnu.org/)
 Un explorateur de fichier dans son terminal.
 
