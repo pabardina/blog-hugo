@@ -13,3 +13,16 @@ theme = "ghostwriter"
   tagline = "En perpétuelle évolution"
   home = "Blog"
   highlight = "sunburst"
+
+[Permalinks]
+    post = "/:filename"
+
+[[menu.main]]
+    name = "Blog"
+    url = "/"
+    weight = 1
+
+[[menu.main]]
+    name = "CV / Resume"
+    url = "/page/cv/"
+    weight = 2
