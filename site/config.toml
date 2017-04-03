@@ -21,8 +21,3 @@ theme = "ghostwriter"
     name = "Blog"
     url = "/"
     weight = 1
-
-[[menu.main]]
-    name = "CV / Resume"
-    url = "/page/cv/"
-    weight = 2
