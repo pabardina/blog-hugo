@@ -113,7 +113,7 @@ Vraiment indispensable si vous faites des recherches dans votre historique bash.
 ![Fzf](https://camo.githubusercontent.com/0b07def9e05309281212369b118fcf9b9fc7948e/68747470733a2f2f7261772e6769746875622e636f6d2f6a756e6567756e6e2f692f6d61737465722f667a662e676966  "Fzf")
 
 #### [Rambox](http://rambox.pro/)
-Centralisé toutes ses messageries instantanées (slack, rocket, irc, messenger...)
+Centraliser toutes ses messageries instantanées (slack, rocket, irc, messenger...)
 
 ![Rambox](https://raw.githubusercontent.com/saenzramiro/rambox/master/resources/screenshots/mac.png)
 
