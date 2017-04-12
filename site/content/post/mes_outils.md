@@ -1,6 +1,7 @@
 +++
 date = "2017-03-30T10:42:00+02:00"
 draft = false
+tags = [ "i3wm", "linux", "fzf", "polybar", "rofi" ]
 title = "Mes outils"
 slug = "mes-outils"
 +++
