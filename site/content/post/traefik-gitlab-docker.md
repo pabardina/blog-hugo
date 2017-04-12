@@ -6,7 +6,7 @@ description = ""
 
 +++
 
-Récemment, j'ai voulu déployer sur un serveur plusieurs applications web (Gitlab, des projets perso). La plupart sont des applications web (front, webservice...). Je voulais tout faire tourner dans des conteneurs. Problème, un conteneur se créé aussi vite qu'il se supprime,  et il faut faire attention à la publication des ports.
+Récemment, j'ai voulu déployer sur un serveur plusieurs applications web (Gitlab, des projets perso) dans des conteneurs Docker. Problème, un conteneur se créé aussi vite qu'il se supprime, et il faut faire attention à la publication des ports.
 
 J'aurai pu utiliser un reverse proxy classique comme Nginx. Le problème est qu'à chaque création ou suppression de conteneur, il faut modifier la configuration de Nginx et rédémarrer le service. Pas vraiment dynamique. Il existe des projets comme Nginx-proxy, mais je n'ai pas testé...
 
@@ -26,16 +26,16 @@ C'est la qu'intervient Traefik !
 
 
 
-Traefik est un reverse proxy HTTP et un load balancer écrit en Go spécialisé dans le déploiement de micro-services. Il est récent et a donc pu éviter les lourdeurs des outils comme Nginx ou HAProxy. Au contraire, on retrouve ici un outil avec une configuration simple, qui peut communiquer avec du Docker, du Swarm, du Kubernetes et pleins d'autres...
+Traefik est un reverse proxy HTTP et un load balancer écrit en Go spécialisé dans le déploiement de micro-services. Il est récent et a donc pu éviter les lourdeurs des outils comme Nginx ou HAProxy. Au contraire, on retrouve ici un outil avec une configuration simple, qui peut communiquer avec du Docker, du Swarm, du Kubernetes et plein d'autres...
 
 C'est un simple binaire, avec beaucoup de fonctionnalités dont voici un extrait :
 
-* Une Api REST pour communiquer avec lui
+* Une API REST pour communiquer avec lui
 * Let's Encrypt avec renouvellement automatique de certificat
 * Support des Websockets et de HTTP/2
 * Scalable
 
-L'avantage de l'outil est qu'il est automatiquement et dynamiquement au courant des nouveaux conteneurs qui sont créés, pas besoin de redémarrer le service.
+L'avantage de l'outil est qu'il est automatiquement et dynamiquement au courant des nouveaux conteneurs créés, pas besoin de redémarrer le service.
 
 Dans mon cas, je vais utiliser l'intégration avec Docker. Vous verrez dans la suite de l'article que cela est enfantin. Il suffit lors de la création d'un conteneur de rajouter des labels utilisés par Traefik et la magie opère.
 
@@ -65,7 +65,7 @@ Projet Github : https://github.com/pabardina/docker-traefik-gitlab
 
 Pour déployer Traefik, je vais utiliser Compose de Docker. J'ai fais le choix de lancer Traefik dans un conteneur.
 
-Tout d'abord, la configuration de Traefik qui se définit dans le fichier `traefik.toml` :
+Tout d'abord, la configuration de Traefik se définit dans le fichier `traefik.toml` :
 
 ```
 # traefik.toml
@@ -73,9 +73,9 @@ Tout d'abord, la configuration de Traefik qui se définit dans le fichier `traef
 # Global configuration
 ################################################################
 
-defaultEntryPoints = ["http", "https"]
+defaultEntryPoints = ["http", "https"] // 1
 
-[entryPoints]
+[entryPoints] // 2
   [entryPoints.http]
   address = ":80"
     [entryPoints.http.redirect]
@@ -84,14 +84,14 @@ defaultEntryPoints = ["http", "https"]
   address = ":443"
     [entryPoints.https.tls]
 
-[acme]
+[acme] // 3
 email = "xxx@xx.com"
 storageFile = "/etc/traefik/acme/acme.json"
 entryPoint = "https"
 OnHostRule = true
 onDemand = true
 
-[[acme.domains]]
+[[acme.domains]] //
   main = "cab.re"
   sans = ["portainer.cab.re", "traefik.cab.re", "gitlab.cab.re"] 
 
@@ -118,7 +118,7 @@ Une configuration simple et lisible.
 La première partie correspond aux points d'entrées sur le reverse proxy. 
 
 ```
-defaultEntryPoints = ["http", "https"]
+defaultEntryPoints = ["http", "https"] // 1
 
 [entryPoints]
   [entryPoints.http]
@@ -170,7 +170,7 @@ OnHostRule = true
 
 Petite précision sur les `Sans` et les limites de Let's Encrypt. Il est possible de faire 20 demandes de certificats par semaine (https://letsencrypt.org/docs/rate-limits/). Si vous avez un seul nom de domaine, vous pouvez utiliser un certificat global, utilisable par 100 domaines alternatifs (avec les `Sans`, comme dans ma configuration).
 
-Par example, dans mon cas, j'utilise le nom de domaine `cab.re`,  mes sous domaines (portainer, traefik, gitlab) utiliseront le certificat principal. En revanche, tous les autres sous domaine comme `example.cab.re` auront leur propre certificat.
+Par example, dans mon cas, j'utilise le nom de domaine `cab.re`,  mes sous domaines (portainer, traefik, gitlab) utiliseront le certificat principal. En revanche, tous les autres sous domaines comme `example.cab.re` auront leur propre certificat.
 
 ### Suite de la configuration
 
@@ -183,16 +183,16 @@ address = ":8080" # Traefik a une interface web
 # Backend utilisé :
 [docker]
 endpoint = "unix:///var/run/docker.sock" # Socket unix ou TCP possible 
-domain = "cab.re" # Le domaine par défault utilisé, par defaut les conteneurs auront un nom `CONTAINER_NAME.cab.re`
-watch = true # Traefik sera au courant des qu'il y a des changements dans Docker
+domain = "cab.re" # Le domaine par défault utilisé, les conteneurs auront un nom `CONTAINER_NAME.cab.re`
+watch = true # Traefik sera au courant des qu'il y a dès changements dans Docker
 
-# Tous les conteneurs seront utilisables par Traefik. 
+# Tous les conteneurs seront utilisables par Traefik
 # Pour qu'il ne le soit pas, il est nécessaire d'ajouter le label "traefik.enable=false" 
 # lors de la création du conteneur
 exposedbydefault = true 
 ```
 
-Maintenant que Traefik a sa configuration, il ne reste plus qu'à le lancer. Comme dis plus haut, je vais le lancer dans un conteneur.
+Maintenant que Traefik a sa configuration, il ne reste plus qu'à le lancer avec Compose.
 
 Le fichier qui va installer Traefik et Portainer `docker-compose.yml`:
 
@@ -250,7 +250,7 @@ Pour utiliser Traefik avec des conteneurs, il faut utiliser les labels de Docker
 
 - "traefik.port=9000" # Le port de l'application dans le conteneur 
 - "traefik.backend=portainer" # Utile pour le load balancing
-- "traefik.frontend.entryPoints=http,https" # Accessible en http et https
+- "traefik.frontend.entryPoints=http,https" # Accessible en HTTP et HTTPS
 ```
 
 Pour lancer la stack :
@@ -270,7 +270,7 @@ J'ai utilisé la stack https://github.com/sameersbn/docker-gitlab
 Note : Changez la variable d'environnement dans le fichier `docker-compose.yml` :  `GITLAB_HOST=gitlab.cab.re`
 
 
-L'avantage d'utiliser Traefik est que vous pouvez utiliser vos fichiers Compose si vous avez déjà de l'existant. Il y a simplement des labels et un réseau Docker à rajouter :
+L'avantage d'utiliser Traefik est que vous pouvez utiliser vos fichiers Compose si vous avez déjà d'existant. Il y a simplement des labels et un réseau Docker à rajouter :
 
 ```
 # Pour les conteneurs qui n'ont pas besoin d'être accessible par Traefik (PostgreSQL, Redis):
@@ -363,18 +363,6 @@ Hostname: 95e9ecce9297%
 
 ```
 
+# Le mot de la fin
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Traefik est un super outil, facile à utiliser. Si vous avez besoin d'un reverse proxy pour vos micro-services je ne peux que vous le conseiller.
