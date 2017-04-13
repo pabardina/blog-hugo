@@ -8,7 +8,7 @@ description = ""
 
 Récemment, j'ai voulu déployer sur un serveur plusieurs applications web (Gitlab, des projets perso) dans des conteneurs Docker. Problème, un conteneur se créé aussi vite qu'il se supprime, et il faut faire attention à la publication des ports.
 
-J'aurai pu utiliser un reverse proxy classique comme Nginx. Le problème est qu'à chaque création ou suppression de conteneur, il faut modifier la configuration de Nginx et rédémarrer le service. Pas vraiment dynamique. Il existe des projets comme Nginx-proxy, mais je n'ai pas testé...
+J'aurai pu utiliser un reverse proxy classique comme Nginx. Le problème est qu'à chaque création ou suppression de conteneur, il faut modifier la configuration de Nginx et redémarrer le service. Pas vraiment dynamique. Il existe des projets comme Nginx-proxy, mais je n'ai pas testé...
 
 Je cherchais donc un outil qui repond à ses besoins :
 
