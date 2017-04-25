@@ -161,7 +161,7 @@ OnHostRule = true
 ```
 
 [[acme.domains]]
-  main = "cab.re" # Domaine pricinpale
+  main = "cab.re" # Domaine principal
   sans = ["portainer.cab.re", "traefik.cab.re", "gitlab.cab.re"] # domaines alternatifs, ils auront le meme certificat que cab.re 
   
 [[acme.domains]]
