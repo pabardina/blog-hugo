@@ -1,5 +1,5 @@
 +++
-title = "Utilisation de Trafik pour Portainer et Gitlab"
+title = "Utilisation de Traefik pour Portainer et Gitlab"
 date = "2017-04-07T09:57:50+02:00"
 tags = ["traefik", "docker", "gitlab"]
 description = ""
