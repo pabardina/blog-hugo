@@ -106,7 +106,7 @@ Avec les extensions [Vimium](https://vimium.github.io/), Lastpass et uBlock.
 Of course !
 
 #### [Ansible](https://www.ansible.com/)
-Je l'utilise dès que je dois refaire plusieurs fois les mêmes choses. Dernier petit projet en date, un playbook qui va provisionner des droplets DigitalOcean, télécharger des torrents dessus, et les récupérer en local : [https://github.com/pabardina/get-torrent-ansible](https://github.com/pabardina/get-torrent-ansible)
+Je l'utilise dès que je dois faire plusieurs fois les mêmes choses. Dernier petit projet en date, un playbook qui va provisionner des droplets DigitalOcean, télécharger des torrents dessus, et les récupérer en local : [https://github.com/pabardina/get-torrent-ansible](https://github.com/pabardina/get-torrent-ansible)
 
 #### [Fzf](https://github.com/junegunn/fzf)
 Vraiment indispensable si vous faites des recherches dans votre historique bash.
