@@ -120,7 +120,7 @@ A code searching tool similar to ack, with a focus on speed.
 direnv is an environment switcher for the shell.
 
 #### [ccat](https://github.com/jingweno/ccat)
-La commande `cat` coloré avec syntax highlighting !
+La commande `cat` colorée avec syntax highlighting !
 
 #### [Rambox](http://rambox.pro/)
 Centraliser toutes ses messageries instantanées (slack, rocket, irc, messenger...)
