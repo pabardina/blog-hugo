@@ -113,6 +113,15 @@ Vraiment indispensable si vous faites des recherches dans votre historique bash.
 
 ![Fzf](https://camo.githubusercontent.com/0b07def9e05309281212369b118fcf9b9fc7948e/68747470733a2f2f7261772e6769746875622e636f6d2f6a756e6567756e6e2f692f6d61737465722f667a662e676966  "Fzf")
 
+#### [The Silver Searcher](https://github.com/ggreer/the_silver_searcher)
+A code searching tool similar to ack, with a focus on speed. 
+
+#### [direnv](https://github.com/direnv/direnv)
+direnv is an environment switcher for the shell.
+
+#### [ccat](https://github.com/jingweno/ccat)
+La commande `cat` coloré avec syntax highlighting !
+
 #### [Rambox](http://rambox.pro/)
 Centraliser toutes ses messageries instantanées (slack, rocket, irc, messenger...)
 
