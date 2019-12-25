@@ -1,5 +1,5 @@
-// ============================================================ //
 // Colours //
+// ============================================================ //
 // ============================================================ //
 
 $primary: #F03838;
@@ -73,6 +73,20 @@ img {
     margin: 40px 0;
     width: auto;
     max-width: 100%;
+
+    &[src$="align-center"] {
+        margin: auto;
+    }
+
+    &[src$="align-left"] {
+        float: left;
+        margin-right: 40px;
+    }
+    
+    &[src$="align-right"] {
+        float: right;
+        margin-left: 40px;
+    }
 }
 
 pre {
@@ -288,6 +302,7 @@ table {
 .page-title { margin: 15px 40px; }
 
 .post-date,
+.post-reading,
 .blog-description {
     color: #AEADAD;
     font-size: 14px;
@@ -297,7 +312,9 @@ table {
 
     a { color: #AEADAD; }
     a:hover { color: $primary; }
+}
 
+.post-line {
     &:after {
         border-bottom: 1px dotted $secondary;
         content: "";
