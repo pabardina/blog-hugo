@@ -2,6 +2,7 @@ baseurl = "https://www.bardina.net/"
 languageCode = "fr-FR"
 title = "Pierre-Alexandre Bardina's blog"
 theme = "ghostwriter"
+googleAnalytics = "UA-51313447-1"
 
 [Author]
   name = "Pierre-Alexandre Bardina"
