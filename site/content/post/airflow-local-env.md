@@ -6,31 +6,29 @@ title = "Airflow part 1: local environment with Docker"
 slug = "airflow-local-env-docker"
 +++
 
-The goal of this few articles is not to explained what is Airflow, but only how to use it different environments with our team. In this article, I will focus on local environment with Docker and some other tools we like to use.
-Then in part 2, I will explain how we use it in our integration / production environment.
-
 Git repository with code described in this article: [https://github.com/pabardina/airflow-example](https://github.com/pabardina/airflow-example)
 
 
-# Airflow at work
-* Quick reminder
+# Airflow
+
 Airflow is a platform to schedule and monitor workflows. It helps us to automate scripts, it is python-based and has a lot of features (interact with cloud providers, FTP, HTTP, SQL, Hadoop...). It is easy to monitor your scripts with clean UI and notifications features like e-mail or Slack message.
 
-* pourquoi on l utilise et ce qu on avait avant (step functions + ecs + ...)
+## Airflow at work 
+
 In our teams, we have differents kind of workflows. From simple python script to complex ETL used for our data warehouse.
-Before Airflow, we had been using AWS Step Functions with AWS ECS. It worked pretty well, but our developers could not easily be autonomus on managing theirs workflows. We used Terraform to deploy AWS Step functions' json. == SO ?
+Before Airflow, we had been using AWS Step Functions with AWS ECS. It worked pretty well, but our developers could not easily be autonomus on managing their workflows. We used Terraform to deploy AWS Step functions which was not used by anybody except myself.
 
 Then, we have discovered Airflow, it has simplified the way we deploy and monitor our scripts. Thus, our time to market has increased because of it ease. For information, we use KubernetesExecutor and are big fan.
 
-### Presentation de nos environment et des problematiques
+### How do we use it ?
 
 At work we use 3 main environments:
 
-* Local : Simple Airflow instance launch with Docker.
-* Integration: Airflow runs on a small Kubernetes cluster. We deploy git branches on this environment with a Slack bot and Circleci.
+* Local : Airflow instance runs in Docker.
+* Integration: Airflow runs in a small Kubernetes cluster. We deploy git branches on this environment with a Slack bot and Circleci.
 * Production: Airflow runs on a Kubernetes cluster. New release are deployed by Circleci.
 
- Git repository structure:
+#### Our git repository structure
 
 ```
 $ tree
@@ -51,9 +49,9 @@ $ tree
         └── secret.yaml
 ```
 
-* airflow variables / connection
+#### Airflow variables and connections
 
-If you are aware of Airflow, you know there are variables and connections. In our integration and production environments, we are using the excellent [helm chart](https://github.com/helm/charts/tree/master/stable/airflow) and it manages very well these data. Thus, to avoid having multiple kind of secrets files, I made a script to import them in our local environment.
+If you are aware of Airflow, you know there are variables and connections. In our integration and production environments, we are using the excellent [helm chart](https://github.com/helm/charts/tree/master/stable/airflow). It handles very well the import of Airflow'secrets. So the goal was to find a way to use the same file structure in all enviroments. But when we develop locally we use Docker, so didn not have a way to easily manage our Airlfow secrets. Thus, to avoid having multiple kind of sensitive files, I made a script to have the same feature as the helm chart. It imports the secrets in our local Airflow.
 
 Example of our local secret file before encryption:
 
@@ -72,9 +70,9 @@ airflow:
     variables: '{ "aws_default_region": " eu-west-1", "environment": "local" }'
 ```
 
-Simple.........
+Simple yaml with two parts.
 
-Dirty solution to import in local environment this file's data:
+Dirty solution to import secrets in local environment:
 
 ```
 $ cat settings/local/import-secret.py
@@ -122,13 +120,13 @@ for conn in secrets['connections']:
 
 I am not a fan of what I coded, but right now it works like a charm. If you want to improve it, please be my guest.
 
-* sops
+#### Sops
 
 I have already talked about [sops](https://www.bardina.net/sops-aws-kms-multi-account/) and the way we use it. 
 
-So yes, I encrypt these files with sops. You are going to see how in the Makefile.
+Thus, I encrypt these sensitive files with sops. You are going to see how in the Makefile.
 
-* Dockerfile
+#### Dockerfile
 
 We use the excellent docker [image](https://github.com/puckel/docker-airflow). We need to install a few more packages:
 
@@ -146,11 +144,9 @@ RUN set -xe \
   && python3 -m ipykernel install
 
 USER airflow
-
-RUN mkdir -p ~/.aws
 ```
 
-* docker-compose 
+#### Docker Compose 
 
 ```
 $ cat docker-compose.yml
@@ -187,13 +183,11 @@ services:
             retries: 3
 ```
 
-Not much to say. We mount our settings/local directory into a settings directory in the webserver container to import variables / connections.
+Not much to say. We mount our `settings/local` directory into a `settings` directory in the webserver container to import variables / connections. It will be used by the home made script which imports secrets into Airflow.
 
+#### Make
 
-
-* make
-
-A Makefile is a really good tool to automate a lot of commands. We use it to start / clean our stack.
+A Makefile is a really good tool to automate a lot of commands. We use it to start our stack, manage secrets and clean everthing of the project.
 
 ```
 $ cat Makefile
@@ -246,15 +240,14 @@ clean:
 
 With this Makefile, our developers don't have to use another command like docker, docker-compose or sops.
 
-* `make start` for deploy the stack
-* `make edit-secret` for edit variables or connections
-* `make apply-secret` for apply new variables or connections
+* `make start` to deploy the stack
+* `make edit-secret` to edit secret
+* `make apply-secret` to apply secret
 * `make clean` 
 
 That's it !
 
-
-In part 2, I will focus on Airflow running in Kubernetes and how we deploy it with Helm. 
+Git repository with code described in this article: [https://github.com/pabardina/airflow-example](https://github.com/pabardina/airflow-example)
 
 
 ## Part 2
