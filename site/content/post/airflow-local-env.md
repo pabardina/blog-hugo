@@ -15,10 +15,10 @@ Airflow is a platform to schedule and monitor workflows. It helps us to automate
 
 ## Airflow at work 
 
-In our teams, we have differents kind of workflows. From simple python script to complex ETL used for our data warehouse.
-Before Airflow, we had been using AWS Step Functions with AWS ECS. It worked pretty well, but our developers could not easily be autonomus on managing their workflows. We used Terraform to deploy AWS Step functions which was not used by anybody except myself.
+In our teams, we have different kind of workflows. From simple python scripts to complex ETL used for our data warehouse.
+Before Airflow, we had been using AWS Step Functions with AWS ECS. It worked pretty well, but our developers could not easily manage their workflows autonomously. We used Terraform to deploy AWS Step functions which was not used by anybody except myself.
 
-Then, we have discovered Airflow, it has simplified the way we deploy and monitor our scripts. Thus, our time to market has increased because of it ease. For information, we use KubernetesExecutor and are big fan.
+Then, we discovered Airflow, it has simplified the way we deploy and monitor our scripts. Thus, our time to market has increased because of its ease. For information, we use KubernetesExecutor and are big fans.
 
 ### How do we use it ?
 
@@ -26,7 +26,7 @@ At work we use 3 main environments:
 
 * Local : Airflow instance runs in Docker.
 * Integration: Airflow runs in a small Kubernetes cluster. We deploy git branches on this environment with a Slack bot and Circleci.
-* Production: Airflow runs on a Kubernetes cluster. New release are deployed by Circleci.
+* Production: Airflow runs in a Kubernetes cluster. New releases are deployed by Circleci.
 
 #### Our git repository structure
 
@@ -51,9 +51,9 @@ $ tree
 
 #### Airflow variables and connections
 
-If you are aware of Airflow, you know there are variables and connections. In our integration and production environments, we are using the excellent [helm chart](https://github.com/helm/charts/tree/master/stable/airflow). It handles very well the import of Airflow'secrets. So the goal was to find a way to use the same file structure in all enviroments. But when we develop locally we use Docker, so didn not have a way to easily manage our Airlfow secrets. Thus, to avoid having multiple kind of sensitive files, I made a script to have the same feature as the helm chart. It imports the secrets in our local Airflow.
+If you are aware of Airflow, you know there are variables and connections. In our integration and production environments, we are using the excellent [helm chart](https://github.com/helm/charts/tree/master/stable/airflow). It handles very well the import of Airflow' secrets. So the goal was to find a way to use the same file structure in all enviroments. But when we develop locally we use Docker, so we did not have a way to easily manage our Airflow' secrets. Thus, to avoid having multiple kinds of sensitive files, I made a script to have the same feature as the helm chart. It imports the secrets to our local Airflow.
 
-Example of our local secret file before encryption:
+An example of our local secret file before encryption:
 
 ```
 $ cat settings/local/secret.yaml
@@ -187,7 +187,7 @@ Not much to say. We mount our `settings/local` directory into a `settings` direc
 
 #### Make
 
-A Makefile is a really good tool to automate a lot of commands. We use it to start our stack, manage secrets and clean everthing of the project.
+A Makefile is a really good tool to automate a lot of commands. We use it to start our stack, manage secrets and clean everything to do with the project.
 
 ```
 $ cat Makefile
