@@ -1,6 +1,6 @@
 +++
-date = "2020-01-02T10:20:00+02:00"
-draft = true
+date = "2020-01-12T10:20:00+02:00"
+draft = false
 tags = [ "airflow", "docker", "sops", "make", "kubernetes", "helm"]
 title = "Airflow part 1: local environment with Docker"
 slug = "airflow-local-env-docker"
@@ -248,19 +248,3 @@ With this Makefile, our developers don't have to use another command like docker
 That's it !
 
 Git repository with code described in this article: [https://github.com/pabardina/airflow-example](https://github.com/pabardina/airflow-example)
-
-
-## Part 2
-* kubernetes
-** deployer avec eks + terraform
-* helm : files
-** command + file
-* circleci 
-** example circleci
-* slack bot
-** example + screen
-
-## Part 3
-* coreos/prometheus-operator
-* prometheus-exporter..
-* alertmanager
