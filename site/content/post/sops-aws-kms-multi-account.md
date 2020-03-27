@@ -9,22 +9,22 @@ slug = "sops-aws-kms-multiple-profiles"
 For a while, I have been wanting to store credentials in git repository. But I have never done it because of security.
 Recently, we have started using Airflow to manage all the different workflows in our teams. (ETL, scripts..). I will write about it in a few weeks.
 
-Anyway, to manage Airflow variables and connections, which are sensitives files, I was looking for a simple but robust solution. Up recently, we were using AWS secret manager, and python code to get/store our sensitive informations. But it is not free, and requires code.
+Anyway, to manage Airflow variables and connections, which are sensitives files, I was looking for a simple but robust solution. Up recently, we were using AWS secret manager, and python code to get/store our sensitive information. But it is not free and requires code.
 
 We have thought about using Vault from Hashicorp, but it's overkill for our needs.
 
 
 # Git-crypt?
 
-First attempt was to use git-crypt. It works well, but only with GPG, and not so simple to manage teams access.
+The First attempt was to use git-crypt. It works well, but only with GPG, and not so simple to manage teams access.
 
 # Sops
 
 Then while looking for another solution on Github, I came across [sops](https://github.com/mozilla/sops) on Mozilla's Github which seemed a perfect solution for our needs. It is used by Mozilla to keep their secrets.
 
-`sops is an editor of encrypted files that supports YAML, JSON, ENV, INI and BINARY formats and encrypts with AWS KMS, GCP KMS, Azure Key Vault and PGP. `
+`sops is an editor of encrypted files that supports YAML, JSON, ENV, INI and BINARY formats and it encrypts with AWS KMS, GCP KMS, Azure Key Vault and PGP. `
 
-AWS KMS? Perfect, we use AWS Cloud, and are already big fan of their KMS. 
+AWS KMS? Perfect, we use AWS Cloud and are already a big fan of their KMS. 
 
 ### Sops, simple usage
 
@@ -75,7 +75,7 @@ Iam users are created in AWS Organization, users use assume-role feature and pro
 
 Different teams have access to the same credentials file, so we do not specify an iam role when using sops.
 
-All teams have access to crendentials in our lab environment.
+All teams have access to credentials in our lab environment.
 Only Circleci and administrators have access to other environments (access managed by iam policies). There is a little trick to use sops with our needs.
 
 Our `.sops.yaml` file looks like this :
@@ -104,4 +104,4 @@ AWS_SDK_LOAD_CONFIG=1 AWS_DEFAULT_PROFILE=sandbox sops -e -i settings/lab/connec
 
 # Conclusion
 
-Sops is a nice find and is already integrated in our stack. I have only shown you how to use it with AWS, but you can do so much with.  Read their documentation if you are interested : [https://github.com/mozilla/sops](https://github.com/mozilla/sops)
+Sops is a nice find and is already integrated in our stack. I have only shown you how to use it with AWS, but you can do so much with.  Read their documentation if you are interested: [https://github.com/mozilla/sops](https://github.com/mozilla/sops)

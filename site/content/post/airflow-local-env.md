@@ -51,7 +51,7 @@ $ tree
 
 #### Airflow variables and connections
 
-If you are aware of Airflow, you know there are variables and connections. In our integration and production environments, we are using the excellent [helm chart](https://github.com/helm/charts/tree/master/stable/airflow). It handles very well the import of Airflow' secrets. So the goal was to find a way to use the same file structure in all enviroments. But when we develop locally we use Docker, so we did not have a way to easily manage our Airflow' secrets. Thus, to avoid having multiple kinds of sensitive files, I made a script to have the same feature as the helm chart. It imports the secrets to our local Airflow.
+If you are aware of Airflow, you know there are variables and connections. In our integration and production environments, we are using the excellent [helm chart](https://github.com/helm/charts/tree/master/stable/airflow). It handles very well the import of Airflow' secrets. So the goal was to find a way to use the same file structure in all environments. But when we develop locally we use Docker, so we did not have a way to easily manage our Airflow' secrets. Thus, to avoid having multiple kinds of sensitive files, I made a script to have the same feature as the helm chart. It imports the secrets to our local Airflow.
 
 An example of our local secret file before encryption:
 
